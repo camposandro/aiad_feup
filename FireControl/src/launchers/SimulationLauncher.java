@@ -15,16 +15,14 @@ import uchicago.src.sim.gui.DisplaySurface;
 import uchicago.src.sim.gui.Object2DDisplay;
 import uchicago.src.sim.space.Object2DGrid;
 
+import java.awt.*;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class SimulationLauncher extends Repast3Launcher {
 
-    private static boolean BATCH_MODE = false;
-
-    private int NUM_FIREFIGHTERS = 10;
+    private Random rand;
 
     private ContainerController mainContainer;
 
@@ -33,29 +31,42 @@ public class SimulationLauncher extends Repast3Launcher {
     private int envWidth = 10;
     private int envHeight = 10;
 
+    private int numFirefighters = 10;
+    private int numFires = 1;
+
     private FireStation fireStation;
     private List<Firefighter> firefighters;
     private List<Fire> fires;
 
     private Map<AID, MyAgent> myAgents;
 
+    public SimulationLauncher() {
+        setRand(new Random());
+    }
+
     public static void main(String[] args) throws IOException {
+        boolean BATCH_MODE = false;
         SimInit init = new SimInit();
+        init.setNumRuns(1); // works only in batch mode
         init.loadModel(new SimulationLauncher(), null, BATCH_MODE);
     }
 
     public void setup() {
         super.setup();
+
+        if (displaySurface != null)
+            displaySurface.dispose();
+
         String displaySurfaceName = "Fire Control Environment";
         setDisplaySurface(new DisplaySurface(this, displaySurfaceName));
         registerDisplaySurface(displaySurfaceName, displaySurface);
     }
 
     public void begin() {
-        super.begin();
         buildModel();
-        buildSchedule();
         buildDisplay();
+        buildSchedule();
+        super.begin();
     }
 
     private void buildModel() {
@@ -69,8 +80,14 @@ public class SimulationLauncher extends Repast3Launcher {
     private void buildDisplay() {
         Object2DDisplay firefightersDisplay = new Object2DDisplay(environment);
         firefightersDisplay.setObjectList(firefighters);
-        displaySurface.addDisplayable(firefightersDisplay, "Firefighters");
-        //addSimEventListener(displaySurface);
+        displaySurface.addDisplayable(firefightersDisplay, "Show Firefighters");
+
+        Object2DDisplay firesDisplay = new Object2DDisplay(environment);
+        firesDisplay.setObjectList(fires);
+        displaySurface.addDisplayable(firesDisplay, "Show Fires");
+
+        displaySurface.setBackground(Color.WHITE);
+        displaySurface.setSize(400,400);
         displaySurface.display();
     }
 
@@ -88,33 +105,56 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private void launchFireStation() throws StaleProxyException {
         setFireStation(new FireStation(this));
-        environment = new Object2DGrid(envWidth, envHeight);
         environment.putObjectAt(fireStation.getX(), fireStation.getY(), fireStation);
         mainContainer.acceptNewAgent("FireStation", fireStation).start();
     }
 
-    private void launchFirefighters() {
-        setFirefighters(new ArrayList<>());
+    private void launchFirefighters() throws StaleProxyException {
+        List<Firefighter> firefighters = new ArrayList<>();
+        for (int i = 0; i < numFirefighters; i++) {
+            Firefighter ff = new Firefighter(this);
+            System.out.println("Firefighter: (" + ff.getX() + "," + ff.getY() + ")");
+            environment.putObjectAt(ff.getX(), ff.getY(), ff);
+            mainContainer.acceptNewAgent("firefighter-" + i, ff).start();
+            firefighters.add(ff);
+        };
+        setFirefighters(firefighters);
     }
 
-    private void launchFires() {
-        setFires(new ArrayList<>());
+    private void launchFires() throws StaleProxyException {
+        List<Fire> fires = new ArrayList<>();
+        for (int i = 0; i < numFires; i++) {
+            Fire f = new Fire(this, rand.nextInt(envWidth), rand.nextInt(envHeight));
+            System.out.println("Fire: (" + f.getX() + "," + f.getY() + ")");
+            environment.putObjectAt(f.getX(), f.getY(), f);
+            mainContainer.acceptNewAgent("fire-" + i, f).start();
+            fires.add(f);
+        };
+        setFires(fires);
     }
 
     public void simulationStep() {
-
+        displaySurface.updateDisplay();
     }
 
     @Override
     public String[] getInitParam() {
         return new String[] {
-                "NUM_FIREFIGHTERS"
+                "numFirefighters, numFires"
         };
     }
 
     @Override
     public String getName() {
         return "AIAD - Fire Control";
+    }
+
+    public Random getRand() {
+        return rand;
+    }
+
+    public void setRand(Random rand) {
+        this.rand = rand;
     }
 
     public ContainerController getMainContainer() {

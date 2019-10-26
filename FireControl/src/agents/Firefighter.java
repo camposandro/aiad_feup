@@ -1,6 +1,17 @@
 package agents;
 
-import sajas.core.Agent;
+import launchers.SimulationLauncher;
+import uchicago.src.sim.gui.SimGraphics;
 
-public class Firefighter extends Agent {
+import java.awt.*;
+
+public class Firefighter extends MyAgent {
+    public Firefighter(SimulationLauncher launcher) {
+        super(launcher);
+    }
+
+    @Override
+    public void draw(SimGraphics simGraphics) {
+        simGraphics.drawStringInHollowOval(Color.BLACK, Color.BLACK, "Firefighter");
+    }
 }

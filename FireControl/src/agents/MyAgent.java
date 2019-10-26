@@ -6,17 +6,15 @@ import uchicago.src.sim.gui.Drawable;
 import uchicago.src.sim.gui.SimGraphics;
 import utils.AgentState;
 
-import java.awt.*;
-
 public abstract class MyAgent extends Agent implements Drawable {
 
     private transient SimulationLauncher environment;
 
-    private AgentState state;
+    protected AgentState state;
 
-    public MyAgent(SimulationLauncher environment, Color color) {
+    public MyAgent(SimulationLauncher environment) {
         this.environment = environment;
-        this.state = new AgentState(color);
+        this.state = new AgentState();
     }
 
     @Override
@@ -46,11 +44,6 @@ public abstract class MyAgent extends Agent implements Drawable {
     }
 
     @Override
-    public void draw(SimGraphics simGraphics) {
-        simGraphics.drawCircle(state.getColor());
-    }
-
-    @Override
     public int getX() {
         return state.getX();
     }
@@ -60,7 +53,8 @@ public abstract class MyAgent extends Agent implements Drawable {
         return state.getY();
     }
 
-    public Color getColor() {
-        return state.getColor();
+    protected void updateState(int x, int y) {
+        state.setX(x);
+        state.setY(y);
     }
 }

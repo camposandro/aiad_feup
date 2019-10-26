@@ -1,25 +1,19 @@
 package utils;
 
-import sajas.core.Agent;
-
-import java.awt.*;
-
 public class AgentState {
 
     private int x;
     private int y;
     private int health;
-    private Color color;
 
-    public AgentState(Color color) {
-        this(0,0, color);
+    public AgentState() {
+        this(0,0);
     }
 
-    public AgentState(int x, int y, Color color) {
+    public AgentState(int x, int y) {
         setX(x);
         setY(y);
         setHealth(100);
-        setColor(color);
     }
 
     public int getX() {
@@ -44,13 +38,5 @@ public class AgentState {
 
     public void setHealth(int health) {
         this.health = health;
-    }
-
-    public Color getColor() {
-        return color;
-    }
-
-    public void setColor(Color color) {
-        this.color = color;
     }
 }
