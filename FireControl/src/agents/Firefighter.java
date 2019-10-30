@@ -27,8 +27,8 @@ public class Firefighter extends MyAgent {
         }
 
         protected void onTick() {
-            if(getX() < 10)
-            updateState(getX() + 1,getY());
+            //if(getX() < 4)
+            //updateState(getX() + 1,getY());
         }
     }
 }

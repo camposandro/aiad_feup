@@ -30,8 +30,8 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private DisplaySurface displaySurface;
     private Object2DGrid environment;
-    private int envWidth = 11;
-    private int envHeight = 7;
+    private int envWidth = 4;
+    private int envHeight = 4;
 
     private MapCell[][] state;
 

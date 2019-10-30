@@ -5,6 +5,8 @@ import uchicago.src.sim.gui.SimGraphics;
 
 import java.awt.*;
 
+import static java.lang.StrictMath.floor;
+
 public class MapCell implements Drawable {
     private int x;
     private int y;
@@ -35,15 +37,15 @@ public class MapCell implements Drawable {
     }
 
     private Color calcColor() {
-        float h = (humidityPercentage * 360 / 100f);
-        float s = vegetationDensity * 0.75f + 25;
-        float b = burnedPercentage * 0.75f + 25;
+        float h1 = humidityPercentage;
+        float h = (humidityPercentage * 100 / 360  * 0.003f + 0.17f);
+        float s = (vegetationDensity * 0.5f + 50) * 0.01f;
+        float v = 1 - (burnedPercentage * 0.75f);
         Color a = Color.getHSBColor(
-                (humidityPercentage * 360 / 100f),
-                (vegetationDensity * 0.75f + 25) * 0.01f,
-                (burnedPercentage * 0.75f + 25) * 0.01f
+                h,
+                s,
+                v
         );
-        System.out.println(h);
         return a;
     }
 
