@@ -3,6 +3,7 @@ package agents;
 import launchers.SimulationLauncher;
 import sajas.core.Agent;
 import sajas.core.behaviours.TickerBehaviour;
+import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.gui.SimGraphics;
 
 import java.awt.*;
@@ -24,9 +25,10 @@ public class Firefighter extends MyAgent {
             super(a, period);
             agent = a;
         }
-        @Override
+
         protected void onTick() {
-            ((Firefighter) agent).updateState(1,1);
+            if(getX() < 10)
+            updateState(getX() + 1,getY());
         }
     }
 }

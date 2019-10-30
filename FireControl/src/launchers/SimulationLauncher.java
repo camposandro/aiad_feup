@@ -30,8 +30,10 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private DisplaySurface displaySurface;
     private Object2DGrid environment;
-    private int envWidth = 2;
-    private int envHeight = 2;
+    private int envWidth = 11;
+    private int envHeight = 7;
+
+    private MapCell[][] state;
 
     private int numFirefighters = 1;
     private int numFires = 1;
@@ -76,7 +78,9 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     private void buildSchedule() {
-        getSchedule().scheduleActionAtInterval(1000, this, "simulationStep");
+
+        getSchedule().scheduleActionAtInterval(100, this, "simulationStep");
+        getSchedule().scheduleActionAtInterval(100, this, "test");
     }
 
     private void buildDisplay() {
@@ -100,19 +104,36 @@ public class SimulationLauncher extends Repast3Launcher {
             initializeMapCells();
             launchFirefighters();
             launchFires();
-            //launchFireStation();
+            launchFireStation();
         } catch(StaleProxyException e) {
             e.printStackTrace();
         }
     }
 
     private void initializeMapCells() {
-        MapCell[][] state = MapState.initialState;
+        this.state = MapState.initialState;
         for (int i = 0; i < envWidth; i++) {
             for (int j = 0; j < envHeight; j++) {
                 environment.putObjectAt(i,j,state[i][j]);
             }
         };
+    }
+
+    private void updateMap() {
+        for (int i = 0; i < envWidth; i++) {
+            for (int j = 0; j < envHeight; j++) {
+                environment.putObjectAt(i,j,state[i][j]);
+            }
+        };
+    }
+
+    private void updateAgents() {
+        for (Firefighter f: firefighters)
+            environment.putObjectAt(f.getX(),f.getY(),f);
+
+        environment.putObjectAt(fireStation.getX(),fireStation.getY(),fireStation);
+        for (Fire fire: fires)
+            environment.putObjectAt(fire.getX(),fire.getY(),fire);
     }
 
     private void launchFireStation() throws StaleProxyException {
@@ -146,8 +167,22 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     public void simulationStep() {
-        System.out.println("UPDATED");
+
         displaySurface.updateDisplay();
+    }
+    public void test() {
+        updateMap();
+        updateAgents();/*
+        for(Firefighter f: firefighters) {
+           // environment.putObjectAt(f.getX(),0,new MapCell(f.getX(),0,50,50));
+            if(f.getX() < 7) {
+                f.setX(f.getX() + 1);
+                System.out.println("x: " + f.getX() + " y: " + f.getY());
+
+            }
+            environment.putObjectAt(f.getX(), f.getY(), f);
+        }*/
+
     }
 
     @Override
