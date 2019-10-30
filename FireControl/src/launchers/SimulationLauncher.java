@@ -14,6 +14,8 @@ import uchicago.src.sim.engine.SimInit;
 import uchicago.src.sim.gui.DisplaySurface;
 import uchicago.src.sim.gui.Object2DDisplay;
 import uchicago.src.sim.space.Object2DGrid;
+import utils.MapCell;
+import utils.MapState;
 
 import java.awt.*;
 import java.io.IOException;
@@ -28,10 +30,10 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private DisplaySurface displaySurface;
     private Object2DGrid environment;
-    private int envWidth = 10;
-    private int envHeight = 10;
+    private int envWidth = 2;
+    private int envHeight = 2;
 
-    private int numFirefighters = 10;
+    private int numFirefighters = 1;
     private int numFires = 1;
 
     private FireStation fireStation;
@@ -74,7 +76,7 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     private void buildSchedule() {
-        getSchedule().scheduleActionAtInterval(1, this, "simulationStep");
+        getSchedule().scheduleActionAtInterval(1000, this, "simulationStep");
     }
 
     private void buildDisplay() {
@@ -95,12 +97,22 @@ public class SimulationLauncher extends Repast3Launcher {
     protected void launchJADE() {
         setMainContainer(Runtime.instance().createMainContainer(new ProfileImpl()));
         try {
-            launchFireStation();
+            initializeMapCells();
             launchFirefighters();
             launchFires();
+            //launchFireStation();
         } catch(StaleProxyException e) {
             e.printStackTrace();
         }
+    }
+
+    private void initializeMapCells() {
+        MapCell[][] state = MapState.initialState;
+        for (int i = 0; i < envWidth; i++) {
+            for (int j = 0; j < envHeight; j++) {
+                environment.putObjectAt(i,j,state[i][j]);
+            }
+        };
     }
 
     private void launchFireStation() throws StaleProxyException {
@@ -134,6 +146,7 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     public void simulationStep() {
+        System.out.println("UPDATED");
         displaySurface.updateDisplay();
     }
 

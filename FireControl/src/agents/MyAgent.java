@@ -3,7 +3,6 @@ package agents;
 import launchers.SimulationLauncher;
 import sajas.core.Agent;
 import uchicago.src.sim.gui.Drawable;
-import uchicago.src.sim.gui.SimGraphics;
 import utils.AgentState;
 
 public abstract class MyAgent extends Agent implements Drawable {
@@ -53,8 +52,17 @@ public abstract class MyAgent extends Agent implements Drawable {
         return state.getY();
     }
 
+    public void setX(int x) {
+        state.setX(x);
+    }
+
+    public void setY(int y) {
+        state.setY(y);
+    }
+
     protected void updateState(int x, int y) {
         state.setX(x);
         state.setY(y);
     }
+
 }

@@ -4,6 +4,8 @@ import launchers.SimulationLauncher;
 import uchicago.src.sim.gui.SimGraphics;
 
 import java.awt.*;
+import java.awt.image.ImageObserver;
+import java.awt.image.ImageProducer;
 
 public class Fire extends MyAgent {
     public Fire(SimulationLauncher launcher, int x, int y) {
