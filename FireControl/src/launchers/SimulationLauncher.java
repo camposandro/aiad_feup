@@ -1,6 +1,6 @@
 package launchers;
 
-import agents.Fire;
+//import agents.Fire;
 import agents.FireStation;
 import agents.Firefighter;
 import agents.MyAgent;
@@ -14,13 +14,14 @@ import uchicago.src.sim.engine.SimInit;
 import uchicago.src.sim.gui.DisplaySurface;
 import uchicago.src.sim.gui.Object2DDisplay;
 import uchicago.src.sim.space.Object2DGrid;
-import utils.MapCell;
+import agents.MapCell;
 import utils.MapState;
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SimulationLauncher extends Repast3Launcher {
 
@@ -40,7 +41,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private FireStation fireStation;
     private List<Firefighter> firefighters;
-    private List<Fire> fires;
+    //private List<Fire> fires;
 
     private Map<AID, MyAgent> myAgents;
 
@@ -64,6 +65,9 @@ public class SimulationLauncher extends Repast3Launcher {
         String displaySurfaceName = "Fire Control Environment";
         setDisplaySurface(new DisplaySurface(this, displaySurfaceName));
         registerDisplaySurface(displaySurfaceName, displaySurface);
+
+        state = MapState.createMapState(this,envWidth,envHeight);
+        genFire();
     }
 
     public void begin() {
@@ -88,9 +92,9 @@ public class SimulationLauncher extends Repast3Launcher {
         firefightersDisplay.setObjectList(firefighters);
         displaySurface.addDisplayable(firefightersDisplay, "Show Firefighters");
 
-        Object2DDisplay firesDisplay = new Object2DDisplay(environment);
+        /*Object2DDisplay firesDisplay = new Object2DDisplay(environment);
         firesDisplay.setObjectList(fires);
-        displaySurface.addDisplayable(firesDisplay, "Show Fires");
+        displaySurface.addDisplayable(firesDisplay, "Show Fires");*/
 
         displaySurface.setBackground(Color.WHITE);
         displaySurface.setSize(400,400);
@@ -103,7 +107,7 @@ public class SimulationLauncher extends Repast3Launcher {
         try {
             initializeMapCells();
             launchFirefighters();
-            launchFires();
+            //launchFires();
             launchFireStation();
         } catch(StaleProxyException e) {
             e.printStackTrace();
@@ -111,7 +115,6 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     private void initializeMapCells() {
-        this.state = MapState.initialState;
         for (int i = 0; i < envWidth; i++) {
             for (int j = 0; j < envHeight; j++) {
                 environment.putObjectAt(i,j,state[i][j]);
@@ -130,10 +133,10 @@ public class SimulationLauncher extends Repast3Launcher {
     private void updateAgents() {
         for (Firefighter f: firefighters)
             environment.putObjectAt(f.getX(),f.getY(),f);
-
+/*
         environment.putObjectAt(fireStation.getX(),fireStation.getY(),fireStation);
         for (Fire fire: fires)
-            environment.putObjectAt(fire.getX(),fire.getY(),fire);
+            environment.putObjectAt(fire.getX(),fire.getY(),fire);*/
     }
 
     private void launchFireStation() throws StaleProxyException {
@@ -153,7 +156,7 @@ public class SimulationLauncher extends Repast3Launcher {
         };
         setFirefighters(firefighters);
     }
-
+/*
     private void launchFires() throws StaleProxyException {
         List<Fire> fires = new ArrayList<>();
         for (int i = 0; i < numFires; i++) {
@@ -165,7 +168,7 @@ public class SimulationLauncher extends Repast3Launcher {
         };
         setFires(fires);
     }
-
+*/
     public void simulationStep() {
 
         displaySurface.updateDisplay();
@@ -260,12 +263,25 @@ public class SimulationLauncher extends Repast3Launcher {
     public void setFirefighters(List<Firefighter> firefighters) {
         this.firefighters = firefighters;
     }
-
+/*
     public List<Fire> getFires() {
         return fires;
     }
 
     public void setFires(List<Fire> fires) {
         this.fires = fires;
+    }
+*/
+    public  MapCell[][] getState() {
+        return state;
+    }
+
+    public void setState( MapCell[][] state) {
+        this.state = state;
+    }
+    public void genFire() {
+        int x = ThreadLocalRandom.current().nextInt(0, envWidth);
+        int y = ThreadLocalRandom.current().nextInt(0, envHeight);
+        state[x][y].setOnFire(true);
     }
 }
