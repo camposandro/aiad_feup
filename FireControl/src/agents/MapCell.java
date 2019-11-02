@@ -15,12 +15,13 @@ public class MapCell extends MyAgent {
     private boolean isPrioritary;
     private int vegetationDensity;
     private int humidityPercentage;
-    private boolean onFire;
     private int burnedPercentage;
+    private boolean onFire;
+    private int soilType; //0 - vegetation, 1 - asphalt, 2 - dirt, 3 - water, 4 - house
     private Color color;
     SimulationLauncher launcher;
 
-    public MapCell(SimulationLauncher launcher, int x, int y, int vegetationDensity, int humidityPercentage) {
+    public MapCell(SimulationLauncher launcher, int x, int y, int vegetationDensity, int humidityPercentage, int soilType) {
         super(launcher);
         setX(x);
         setY(y);
@@ -28,6 +29,7 @@ public class MapCell extends MyAgent {
         setVegetationDensity(vegetationDensity);
         setHumidityPercentage(humidityPercentage);
         setOnFire(onFire);
+        setSoilType(soilType);
         setBurnedPercentage(0);
         setColor(this.calcColor());
         this.addBehaviour(new MapCellBehaviour(this,10));
@@ -36,12 +38,27 @@ public class MapCell extends MyAgent {
 
     private Color calcColor() {
 
-        float h = (humidityPercentage * 100 / 360  * 0.003f + 0.17f);
+        float h = 0, s = 0, v = 0;
+
         if(onFire) {
             h = 0f;
+            s = (vegetationDensity * 0.5f + 50) * 0.01f;
+            v = 1 - (burnedPercentage * 0.75f);
         }
-        float s = (vegetationDensity * 0.5f + 50) * 0.01f;
-        float v = 1 - (burnedPercentage * 0.75f);
+        else if(soilType == 1){ //asphalt
+            h = 0f;
+            s = 0f;
+            v = 0f;
+        }
+        else{
+            h = (humidityPercentage * 100 / 360  * 0.003f + 0.15f);
+            s = (vegetationDensity * 0.5f + 50) * 0.01f;
+            v = 1 - (burnedPercentage * 0.75f);
+
+        }
+
+
+
 
         Color a = Color.getHSBColor(
                 h,
@@ -52,7 +69,7 @@ public class MapCell extends MyAgent {
     }
 
     protected void OnTick() {
-        System.out.println("js");
+        System.out.println("tic");
         if(onFire)
             if(burnedPercentage == 100) {
                 onFire = false;
@@ -123,6 +140,11 @@ public class MapCell extends MyAgent {
 
     public void setOnFire(boolean onFire) {
         this.onFire = onFire;
+        setColor(this.calcColor());
+    }
+
+    public void setSoilType(int soilType) {
+        this.soilType = soilType;
         setColor(this.calcColor());
     }
 
