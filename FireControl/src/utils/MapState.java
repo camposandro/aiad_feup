@@ -16,10 +16,14 @@ public class MapState {
         MapCell[][] mapCell = new MapCell[width][length];
         for(int i = 0; i < width; i++)
             for(int j = 0; j < length; j++)
-                if(j != 3)
-                    mapCell[i][j] = new MapCell(launcher,i,j,100/width*i,100/length*j, 0);
-                else{
+                if(j == 3)
                     mapCell[i][j] = new MapCell(launcher,i,j,0,0, 1);
+                else if(i == 7){
+                    mapCell[i][j] = new MapCell(launcher,i,j,0,0, 2);
+                }
+                else{
+                    mapCell[i][j] = new MapCell(launcher,i,j,100/width*i,100/length*j, 0);
+
                 }
 
             return mapCell;

@@ -39,6 +39,7 @@ public class MapCell extends MyAgent {
     private Color calcColor() {
 
         float h = 0, s = 0, v = 0;
+        Color a;
 
         if(onFire) {
             h = 0f;
@@ -50,21 +51,20 @@ public class MapCell extends MyAgent {
             s = 0f;
             v = 0f;
         }
+        else if(soilType == 2){ //dirt
+            h = 0.035f;
+            s = 50;
+            v = 90;
+        }
         else{
-            h = (humidityPercentage * 100 / 360  * 0.003f + 0.15f);
+            h = humidityPercentage * 100 / 360  * 0.003f + 0.15f;
             s = (vegetationDensity * 0.5f + 50) * 0.01f;
             v = 1 - (burnedPercentage * 0.75f);
 
         }
 
 
-
-
-        Color a = Color.getHSBColor(
-                h,
-                s,
-                v
-        );
+        a = Color.getHSBColor(h, s, v);
         return a;
     }
 
