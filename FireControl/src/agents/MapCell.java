@@ -45,26 +45,29 @@ public class MapCell extends MyAgent {
             h = 0f;
             s = (vegetationDensity * 0.5f + 50) * 0.01f;
             v = 1 - (burnedPercentage * 0.75f);
+
+            a = Color.getHSBColor(h, s, v);
         }
         else if(soilType == 1){ //asphalt
-            h = 0f;
-            s = 0f;
-            v = 0f;
+            a = Color.getHSBColor(0, 0, 0);
         }
         else if(soilType == 2){ //dirt
             h = 0.035f;
             s = 50;
             v = 90;
+
+            a = new Color(230, 182, 115);
         }
         else{
             h = humidityPercentage * 100 / 360  * 0.003f + 0.15f;
             s = (vegetationDensity * 0.5f + 50) * 0.01f;
             v = 1 - (burnedPercentage * 0.75f);
 
+            a = Color.getHSBColor(h, s, v);
         }
 
 
-        a = Color.getHSBColor(h, s, v);
+
         return a;
     }
 
