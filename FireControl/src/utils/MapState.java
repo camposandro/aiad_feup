@@ -1,5 +1,6 @@
 package utils;
 
+import java.util.Random;
 import agents.MapCell;
 import launchers.SimulationLauncher;
 
@@ -14,7 +15,7 @@ public class MapState {
 
     public static MapCell[][] createMapState(SimulationLauncher launcher, int width, int length) {
         MapCell[][] mapCell = new MapCell[width][length];
-        for(int i = 0; i < width; i++)
+        /*for(int i = 0; i < width; i++)
             for(int j = 0; j < length; j++)
                 if(j == 3)
                     mapCell[i][j] = new MapCell(launcher,i,j,0,0, 1);
@@ -30,9 +31,162 @@ public class MapState {
                 else{
                     mapCell[i][j] = new MapCell(launcher,i,j,100/width*i,100/length*j, 0);
 
-                }
+                }*/
 
-            return mapCell;
+
+        Random rand = new Random();
+
+        int randVeg = rand.nextInt(101);
+        int randHum = rand.nextInt(101);
+
+        int newVeg;
+        int newHum;
+
+        int vegMax;
+        int vegMin;
+
+        int humMax;
+        int humMin;
+
+        int range = 8;
+
+        //Generate vegetation
+        for(int i = 0; i < width; i++) {
+            for (int j = 0; j < length; j++) {
+                if(i == 0){ // first column
+                    if(j == 0){ // first row
+                        mapCell[i][j] = new MapCell(launcher,i, j, randVeg, randHum, 0);
+                    }
+                    else{ // other columns
+                        if(mapCell[i][j-1].getVegetationDensity() + range > 100){
+                            vegMax = 100;
+                            vegMin = mapCell[i][j-1].getVegetationDensity() - range;
+                        }
+                        else if(mapCell[i][j-1].getVegetationDensity() - range < 0){
+                            vegMin = 0;
+                            vegMax = mapCell[i][j-1].getVegetationDensity() + range;
+                        }
+                        else{
+                            vegMin = mapCell[i][j-1].getVegetationDensity() - range;
+                            vegMax = mapCell[i][j-1].getVegetationDensity() + range;
+                        }
+
+
+                        if(mapCell[i][j-1].getHumidityPercentage() + range > 100){
+                            humMax = 100;
+                            humMin = mapCell[i][j-1].getHumidityPercentage() - range;
+                        }
+                        else if(mapCell[i][j-1].getHumidityPercentage() - range < 0){
+                            humMin = 0;
+                            humMax = mapCell[i][j-1].getHumidityPercentage() + range;
+                        }
+                        else{
+                            humMin = mapCell[i][j-1].getHumidityPercentage() - range;
+                            humMax = mapCell[i][j-1].getHumidityPercentage() + range;
+                        }
+
+
+                        newVeg = rand.nextInt(vegMax - vegMin) + vegMin;
+                        newHum = rand.nextInt(humMax - humMin) + humMin;
+
+
+                        mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0);
+                    }
+                }
+                else{ // other rows
+                    if(j == 0){ // first row
+                        if(mapCell[i-1][j].getVegetationDensity() + range > 100){
+                            vegMax = 100;
+                            vegMin = mapCell[i-1][j].getVegetationDensity() - range;
+                        }
+                        else if(mapCell[i-1][j].getVegetationDensity() - range < 0){
+                            vegMin = 0;
+                            vegMax = mapCell[i-1][j].getVegetationDensity() + range;
+                        }
+                        else{
+                            vegMin = mapCell[i-1][j].getVegetationDensity() - range;
+                            vegMax = mapCell[i-1][j].getVegetationDensity() + range;
+                        }
+
+
+                        if(mapCell[i-1][j].getHumidityPercentage() + range > 100){
+                            humMax = 100;
+                            humMin = mapCell[i-1][j].getHumidityPercentage() - range;
+                        }
+                        else if(mapCell[i-1][j].getHumidityPercentage() - range < 0){
+                            humMin = 0;
+                            humMax = mapCell[i-1][j].getHumidityPercentage() + range;
+                        }
+                        else{
+                            humMin = mapCell[i-1][j].getHumidityPercentage() - range;
+                            humMax = mapCell[i-1][j].getHumidityPercentage() + range;
+                        }
+
+
+                        newVeg = rand.nextInt(vegMax - vegMin) + vegMin;
+                        newHum = rand.nextInt(humMax - humMin) + humMin;
+
+
+                        mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0);
+                    }
+                    else{ // other columns
+                        if(mapCell[i][j-1].getVegetationDensity() + range > 100){
+                            vegMax = 100;
+                            vegMin = mapCell[i][j-1].getVegetationDensity() - range;
+                        }
+                        else if(mapCell[i][j-1].getVegetationDensity() - range < 0){
+                            vegMin = 0;
+                            vegMax = mapCell[i][j-1].getVegetationDensity() + range;
+                        }
+                        else{
+                            vegMin = mapCell[i][j-1].getVegetationDensity() - range;
+                            vegMax = mapCell[i][j-1].getVegetationDensity() + range;
+                        }
+
+
+                        if(mapCell[i][j-1].getHumidityPercentage() + range > 100){
+                            humMax = 100;
+                            humMin = mapCell[i][j-1].getHumidityPercentage() - range;
+                        }
+                        else if(mapCell[i][j-1].getHumidityPercentage() - range < 0){
+                            humMin = 0;
+                            humMax = mapCell[i][j-1].getHumidityPercentage() + range;
+                        }
+                        else{
+                            humMin = mapCell[i][j-1].getHumidityPercentage() - range;
+                            humMax = mapCell[i][j-1].getHumidityPercentage() + range;
+                        }
+
+
+                        newVeg = rand.nextInt(vegMax - vegMin) + vegMin;
+                        newHum = rand.nextInt(humMax - humMin) + humMin;
+
+
+                        mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0);
+                    }
+                }
+            }
+        }
+
+        //Generate Water bodies
+            //Generate Lakes
+
+            //Generate Rivers
+
+        //Generate Houses
+            //Generate Villages
+
+            //Generate Remote Houses
+
+        //Generate Roads
+            //Generate Asphalt Roads
+
+            //Generate Dirt Roads
+
+
+
+
+        return mapCell;
 
     }
 }
