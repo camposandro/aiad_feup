@@ -58,6 +58,13 @@ public class MapCell extends MyAgent {
 
             a = new Color(230, 182, 115);
         }
+        else if(soilType == 3){ //dirt
+            h = 0.035f;
+            s = 50;
+            v = 90;
+
+            a = new Color(147, 176, 204);
+        }
         else{
             h = humidityPercentage * 100 / 360  * 0.003f + 0.15f;
             s = (vegetationDensity * 0.5f + 50) * 0.01f;
