@@ -15,25 +15,6 @@ public class MapState {
 
     public static MapCell[][] createMapState(SimulationLauncher launcher, int width, int length) {
         MapCell[][] mapCell = new MapCell[width][length];
-        /*for(int i = 0; i < width; i++)
-            for(int j = 0; j < length; j++)
-                if(j == 3)
-                    mapCell[i][j] = new MapCell(launcher,i,j,0,0, 1);
-                else if(i == 7){
-                    mapCell[i][j] = new MapCell(launcher,i,j,0,0, 2);
-                }
-                else if(i > 10 && i < 20 && j > 30 && j < 40){
-                    mapCell[i][j] = new MapCell(launcher,i,j,0,0, 3);
-                }
-                else if( (i == 55 && j == 55) || (i >= 58 && i <= 60 && j >= 58 && j <= 60) ){
-                    mapCell[i][j] = new MapCell(launcher,i,j,0,0, 4);
-                }
-                else{
-                    mapCell[i][j] = new MapCell(launcher,i,j,100/width*i,100/length*j, 0);
-
-                }*/
-
-
         Random rand = new Random();
 
         int randVeg = rand.nextInt(101);
@@ -162,9 +143,7 @@ public class MapState {
         }
 
         //Generate Water bodies
-            //Generate Lakes
-
-            //Generate Rivers
+        mapCell = generateWaterBodies(mapCell);
 
         //Generate Houses
             //Generate Villages
@@ -181,5 +160,105 @@ public class MapState {
 
         return mapCell;
 
+    }
+
+    public static MapCell[][] generateWaterBodies(MapCell[][] map){
+        //Generate Lakes
+        map = generateLakes(map);
+        //Generate Rivers
+        map = generateRivers(map);
+
+        return map;
+    }
+
+    public static MapCell[][] generateLakes(MapCell[][] map){
+        Random rand = new Random();
+
+        int numOfLakes = rand.nextInt(map.length * map[0].length / 5000);
+        int lakeMaximumRadius = 12;
+
+        System.out.println("Number of lakes = " + numOfLakes);
+
+        int[][] lakePositions = new int[numOfLakes][2];
+
+        for(int i = 0; i < numOfLakes; i++){
+            int lakeX = rand.nextInt(map.length);
+            int lakeY = rand.nextInt(map[0].length);
+            //2 lagos na mesma posição?
+            lakePositions[i][0] = lakeX;
+            lakePositions[i][1] = lakeY;
+        }
+
+        for(int i = 0; i < numOfLakes; i++){
+            int lakeRadius = rand.nextInt(lakeMaximumRadius);
+
+            System.out.println("Lake Radius = " + lakeRadius);
+
+            int minX, maxX, minY, maxY;
+            //lake center
+            map[lakePositions[i][0]][lakePositions[i][1]].setVegetationDensity(0);
+            map[lakePositions[i][0]][lakePositions[i][1]].setHumidityPercentage(100);
+            map[lakePositions[i][0]][lakePositions[i][1]].setSoilType(3);
+
+            //lake size
+            if(lakePositions[i][0] - lakeRadius < 0){
+                minX = 0;
+                maxX = lakePositions[i][0] + lakeRadius;
+            }
+            else if(lakePositions[i][0] + lakeRadius > map.length){
+                minX = lakePositions[i][0] - lakeRadius;
+                maxX = map.length;
+            }
+            else{
+                minX = lakePositions[i][0] - lakeRadius;
+                maxX = lakePositions[i][0] + lakeRadius;
+            }
+
+            if(lakePositions[i][1] - lakeRadius < 0){
+                minY = 0;
+                maxY = lakePositions[i][1] + lakeRadius;
+            }
+            else if(lakePositions[i][1] + lakeRadius > map[0].length){
+                minY = lakePositions[i][1] - lakeRadius;
+                maxY = map.length;
+            }
+            else{
+                minY = lakePositions[i][1] - lakeRadius;
+                maxY = lakePositions[i][1] + lakeRadius;
+            }
+
+
+            for(int m = minX; m < maxX; m++){
+                for(int n = minY; n < maxY; n++){
+                    if(calculateDist(lakePositions[i][0], lakePositions[i][1], m, n) < lakeRadius/2){//perto do centro
+                        map[m][n].setVegetationDensity(0);
+                        map[m][n].setHumidityPercentage(100);
+                        map[m][n].setSoilType(3);
+                    }
+                    else{
+                        int r = rand.nextInt(lakeRadius);
+                        if(calculateDist(lakePositions[i][0], lakePositions[i][1], m, n) < r){
+                            map[m][n].setVegetationDensity(0);
+                            map[m][n].setHumidityPercentage(100);
+                            map[m][n].setSoilType(3);
+                        }
+                    }
+                }
+            }
+
+
+        }
+
+        return map;
+    }
+
+    public static MapCell[][] generateRivers(MapCell[][] map){
+        //TO DO
+
+        return map;
+    }
+
+    public static int calculateDist(int x1, int y1, int x2, int y2){
+        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
 }
