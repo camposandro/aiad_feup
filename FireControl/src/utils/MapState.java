@@ -24,6 +24,9 @@ public class MapState {
                 else if(i > 10 && i < 20 && j > 30 && j < 40){
                     mapCell[i][j] = new MapCell(launcher,i,j,0,0, 3);
                 }
+                else if( (i == 55 && j == 55) || (i >= 58 && i <= 60 && j >= 58 && j <= 60) ){
+                    mapCell[i][j] = new MapCell(launcher,i,j,0,0, 4);
+                }
                 else{
                     mapCell[i][j] = new MapCell(launcher,i,j,100/width*i,100/length*j, 0);
 
