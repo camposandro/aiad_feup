@@ -48,7 +48,7 @@ public class MapState {
         int humMax;
         int humMin;
 
-        int range = 8;
+        int range = 15;
 
         //Generate vegetation
         for(int i = 0; i < width; i++) {
@@ -94,31 +94,61 @@ public class MapState {
                 }
 
                 else{ // other columns
-                    if(mapCell[i][j-1].getVegetationDensity() + range > 100){
-                        vegMax = 100;
-                        vegMin = mapCell[i][j-1].getVegetationDensity() - range;
-                    }
-                    else if(mapCell[i][j-1].getVegetationDensity() - range < 0){
-                        vegMin = 0;
-                        vegMax = mapCell[i][j-1].getVegetationDensity() + range;
-                    }
-                    else{
-                        vegMin = mapCell[i][j-1].getVegetationDensity() - range;
-                        vegMax = mapCell[i][j-1].getVegetationDensity() + range;
-                    }
+                    if(i == 0){
+                        if(mapCell[i][j-1].getVegetationDensity() + range > 100){
+                            vegMax = 100;
+                            vegMin = mapCell[i][j-1].getVegetationDensity() - range;
+                        }
+                        else if(mapCell[i][j-1].getVegetationDensity() - range < 0){
+                            vegMin = 0;
+                            vegMax = mapCell[i][j-1].getVegetationDensity() + range;
+                        }
+                        else{
+                            vegMin = mapCell[i][j-1].getVegetationDensity() - range;
+                            vegMax = mapCell[i][j-1].getVegetationDensity() + range;
+                        }
 
 
-                    if(mapCell[i][j-1].getHumidityPercentage() + range > 100){
-                        humMax = 100;
-                        humMin = mapCell[i][j-1].getHumidityPercentage() - range;
-                    }
-                    else if(mapCell[i][j-1].getHumidityPercentage() - range < 0){
-                        humMin = 0;
-                        humMax = mapCell[i][j-1].getHumidityPercentage() + range;
+                        if(mapCell[i][j-1].getHumidityPercentage() + range > 100){
+                            humMax = 100;
+                            humMin = mapCell[i][j-1].getHumidityPercentage() - range;
+                        }
+                        else if(mapCell[i][j-1].getHumidityPercentage() - range < 0){
+                            humMin = 0;
+                            humMax = mapCell[i][j-1].getHumidityPercentage() + range;
+                        }
+                        else{
+                            humMin = mapCell[i][j-1].getHumidityPercentage() - range;
+                            humMax = mapCell[i][j-1].getHumidityPercentage() + range;
+                        }
                     }
                     else{
-                        humMin = mapCell[i][j-1].getHumidityPercentage() - range;
-                        humMax = mapCell[i][j-1].getHumidityPercentage() + range;
+                        if((mapCell[i-1][j].getVegetationDensity() + mapCell[i][j-1].getVegetationDensity())/2 + range > 100){
+                            vegMax = 100;
+                            vegMin = (mapCell[i-1][j].getVegetationDensity() + mapCell[i][j-1].getVegetationDensity())/2 - range;
+                        }
+                        else if((mapCell[i-1][j].getVegetationDensity() + mapCell[i][j-1].getVegetationDensity())/2 - range < 0){
+                            vegMin = 0;
+                            vegMax = (mapCell[i-1][j].getVegetationDensity() + mapCell[i][j-1].getVegetationDensity())/2 + range;
+                        }
+                        else{
+                            vegMin = (mapCell[i-1][j].getVegetationDensity() + mapCell[i][j-1].getVegetationDensity())/2 - range;
+                            vegMax = (mapCell[i-1][j].getVegetationDensity() + mapCell[i][j-1].getVegetationDensity())/2 + range;
+                        }
+
+
+                        if((mapCell[i-1][j].getHumidityPercentage() + mapCell[i][j-1].getHumidityPercentage())/2 + range > 100){
+                            humMax = 100;
+                            humMin = (mapCell[i-1][j].getHumidityPercentage() + mapCell[i][j-1].getHumidityPercentage())/2 - range;
+                        }
+                        else if((mapCell[i-1][j].getHumidityPercentage() + mapCell[i][j-1].getHumidityPercentage())/2 - range < 0){
+                            humMin = 0;
+                            humMax = (mapCell[i-1][j].getHumidityPercentage() + mapCell[i][j-1].getHumidityPercentage())/2 + range;
+                        }
+                        else{
+                            humMin = (mapCell[i-1][j].getHumidityPercentage() + mapCell[i][j-1].getHumidityPercentage())/2 - range;
+                            humMax = (mapCell[i-1][j].getHumidityPercentage() + mapCell[i][j-1].getHumidityPercentage())/2 + range;
+                        }
                     }
 
 
