@@ -6,7 +6,7 @@ import launchers.SimulationLauncher;
 
 public class MapState {
 
-    public static MapCell[][] createMapState(SimulationLauncher launcher, int width, int length) {
+    public static MapCell[][] createMapState(SimulationLauncher launcher, int width, int length, int fireX, int fireY) {
         MapCell[][] mapCell = new MapCell[width][length];
         Random rand = new Random();
 
@@ -28,7 +28,7 @@ public class MapState {
         for(int i = 0; i < width; i++) {
             for (int j = 0; j < length; j++) {
                 if(i == 0 && j == 0){ // first column &  first row
-                        mapCell[i][j] = new MapCell(launcher,i, j, randVeg, randHum, 0);
+                        mapCell[i][j] = new MapCell(launcher,i, j, randVeg, randHum, 0, false);
                 }
 
                 else if(j == 0){ // first row
@@ -64,7 +64,7 @@ public class MapState {
                     newHum = rand.nextInt(humMax - humMin) + humMin;
 
 
-                    mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0);
+                    mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0, false);
                 }
 
                 else{ // other columns
@@ -128,9 +128,11 @@ public class MapState {
 
                     newVeg = rand.nextInt(vegMax - vegMin) + vegMin;
                     newHum = rand.nextInt(humMax - humMin) + humMin;
+                    boolean onFire = false;
+                    if(i == fireX && j == fireY)
+                        onFire = true;
 
-
-                    mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0);
+                    mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0, onFire);
                 }
             }
         }

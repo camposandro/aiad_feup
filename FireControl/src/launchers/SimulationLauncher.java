@@ -66,8 +66,10 @@ public class SimulationLauncher extends Repast3Launcher {
         setDisplaySurface(new DisplaySurface(this, displaySurfaceName));
         registerDisplaySurface(displaySurfaceName, displaySurface);
 
-        state = MapState.createMapState(this,envWidth,envHeight);
-        genFire();
+        state = MapState.createMapState(this,envWidth,envHeight,50,50);
+
+        //state = MapState.createMapState(this,envWidth,envHeight,ThreadLocalRandom.current().nextInt(0, envWidth),ThreadLocalRandom.current().nextInt(0, envHeight));
+        //genFire();
     }
 
     public void begin() {
@@ -114,10 +116,12 @@ public class SimulationLauncher extends Repast3Launcher {
         }
     }
 
-    private void initializeMapCells() {
+    private void initializeMapCells() throws StaleProxyException {
         for (int i = 0; i < envWidth; i++) {
             for (int j = 0; j < envHeight; j++) {
                 environment.putObjectAt(i,j,state[i][j]);
+                mainContainer.acceptNewAgent("cell-" + i + "-" + j, state[i][j]).start();
+
             }
         };
     }
@@ -275,10 +279,14 @@ public class SimulationLauncher extends Repast3Launcher {
     public  MapCell[][] getState() {
         return state;
     }
+    public  MapCell getStatePos(int x, int y) {
+        return state[x][y];
+    }
 
     public void setState( MapCell[][] state) {
         this.state = state;
     }
+
     public void genFire() {
         int x = ThreadLocalRandom.current().nextInt(0, envWidth);
         int y = ThreadLocalRandom.current().nextInt(0, envHeight);

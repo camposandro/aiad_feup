@@ -21,18 +21,20 @@ public class MapCell extends MyAgent {
     private Color color;
     SimulationLauncher launcher;
 
-    public MapCell(SimulationLauncher launcher, int x, int y, int vegetationDensity, int humidityPercentage, int soilType) {
+    public MapCell(SimulationLauncher launcher, int x, int y, int vegetationDensity, int humidityPercentage, int soilType, boolean onFire) {
         super(launcher);
+        this.launcher = launcher;
         setX(x);
         //System.out.println(this.getX());
         setY(y);
         setIsPrioritary(false);
+        setOnFire(onFire);
         setVegetationDensity(vegetationDensity);
         setHumidityPercentage(humidityPercentage);
         setSoilType(soilType);
         setBurnedPercentage(0);
         setColor(this.calcColor());
-        this.addBehaviour(new MapCellBehaviour(this, 10));
+        this.addBehaviour(new MapCellBehaviour(this, 1));
 
     }
 
@@ -44,10 +46,10 @@ public class MapCell extends MyAgent {
         if (onFire) {
             h = 0;
             s = (vegetationDensity * 0.5f + 50) * 0.01f;
-            v = 1 - (burnedPercentage * 0.75f);
-
+            v = 1 - (burnedPercentage * 0.75f * 0.01f);
             a = Color.getHSBColor(h, s, v);
-        } else if (soilType == 1) { //asphalt
+        }
+        else if (soilType == 1) { //asphalt
             a = Color.getHSBColor(0, 0, 0);
         } else if (soilType == 2) { //dirt
             a = new Color(230, 182, 115);
@@ -67,31 +69,14 @@ public class MapCell extends MyAgent {
         return a;
     }
 
-    protected void OnTick() {
-        System.out.println("tic");
-        if (onFire)
-            if (burnedPercentage == 100) {
-                onFire = false;
-                return;
-            }
-
-        MapCell[] neighbours = getNeighbours();
-        for (int i = 0; i < 4; i++) {
-            neighbours[i].catchFireProbability(ThreadLocalRandom.current().nextInt(0, 100));
-        }
-        burnedPercentage += 10;
-
-    }
-
-
     private MapCell[] getNeighbours() {
         MapCell[] neighbours = new MapCell[4];
 
-        //neighbours[0] = launcher.getState()[x][y+1];
-        //neighbours[1] = launcher.getState()[x][y-1];
-        //neighbours[2] = launcher.getState()[x-1][y];
-        //neighbours[3] = launcher.getState()[x+1][y];
-
+        neighbours[0] = launcher.getState()[x][y+1];
+        neighbours[1] = launcher.getState()[x][y-1];
+        neighbours[2] = launcher.getState()[x-1][y];
+        neighbours[3] = launcher.getState()[x+1][y];
+        //System.out.println(launcher.getStatePos(1,1));
         return neighbours;
 
     }
@@ -100,8 +85,10 @@ public class MapCell extends MyAgent {
         if (burnedPercentage == 100) {
             return;
         }
-        if (random < vegetationDensity * (100 - humidityPercentage))
+        if (random < vegetationDensity * (100 - humidityPercentage)) {
             this.onFire = true;
+            setColor(this.calcColor());
+        }
     }
 
 
@@ -192,6 +179,7 @@ public class MapCell extends MyAgent {
 
         protected void onTick() {
 
+
             //System.out.println(launcher.getState()[2][2]);
             //launcher.getState()[x][y].setBurnedPercentage(burnedPercentage + 10);
             if (onFire) {
@@ -199,12 +187,14 @@ public class MapCell extends MyAgent {
                     onFire = false;
                     return;
                 }
-/*
-            MapCell[] neighbours = getNeighbours();
-            for(int i = 0; i < 4; i++) {
-                neighbours[i].catchFireProbability(ThreadLocalRandom.current().nextInt(0, 100));
-            }*/
+
+                MapCell[] neighbours = getNeighbours();
+                for(int i = 0; i < 4; i++) {
+                    neighbours[i].catchFireProbability(ThreadLocalRandom.current().nextInt(75, 100));
+                }
                 setBurnedPercentage(burnedPercentage + 10);
+                System.out.println(burnedPercentage);
+                setColor(calcColor());
             }
         }
     }
