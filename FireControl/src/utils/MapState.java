@@ -300,7 +300,13 @@ public class MapState {
 
 
                 }
-                deviation += rand.nextInt(riverWidth) - riverWidth/2;
+                if(riverWidth == 1){
+                    deviation += rand.nextInt(riverWidth + 2) - riverWidth;
+                }
+                else{
+                    deviation += rand.nextInt(riverWidth + 1) - riverWidth/2;
+                }
+
                 //System.out.println(deviation);
 
             }
