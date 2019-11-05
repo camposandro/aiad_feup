@@ -30,10 +30,10 @@ public class SimulationLauncher extends Repast3Launcher {
     private ContainerController mainContainer;
 
     private DisplaySurface displaySurface;
-    private Object2DGrid environment;
-    private int envWidth = 75;     // Recomended size          = 200x100
-    private int envHeight = 75;    // Recommended maximum size = 800X400
-
+    private Object2DGrid environment;   // Minimum size             = 150x75
+    private int envWidth = 200;         // Recomended size          = 200x100
+    private int envHeight = 100;        // Recommended maximum size = 800X400
+                                        // Absoulute Repast Maximum = 1200x600
     private MapCell[][] state;
 
     private int numFirefighters = 1;
@@ -83,8 +83,8 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private void buildSchedule() {
 
-        getSchedule().scheduleActionAtInterval(10, this, "simulationStep");
-        getSchedule().scheduleActionAtInterval(10, this, "test");
+        getSchedule().scheduleActionAtInterval(100, this, "simulationStep");
+        getSchedule().scheduleActionAtInterval(100, this, "test");
     }
 
     private void buildDisplay() {
@@ -114,21 +114,12 @@ public class SimulationLauncher extends Repast3Launcher {
         }
     }
 
-    private void initializeMapCells() throws StaleProxyException {
+    private void initializeMapCells() {
         for (int i = 0; i < envWidth; i++) {
             for (int j = 0; j < envHeight; j++) {
                 environment.putObjectAt(i,j,state[i][j]);
-                mainContainer.acceptNewAgent("cell-" + i + "-" + j, state[i][j]).start();
-                //System.out.println(state[i][j].getX());
-
             }
         };
-/*
-        Firefighter ff = new Firefighter(this);
-        System.out.println("Firefighter: (" + ff.getX() + "," + ff.getY() + ")");
-        environment.putObjectAt(ff.getX(), ff.getY(), ff);
-        mainContainer.acceptNewAgent("firefighter-" + i, ff).start();
-        firefighters.add(ff);*/
     }
 
     private void updateMap() {

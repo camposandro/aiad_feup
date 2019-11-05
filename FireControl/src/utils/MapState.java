@@ -5,13 +5,6 @@ import agents.MapCell;
 import launchers.SimulationLauncher;
 
 public class MapState {
-    /*
-    public static final MapCell[][] initialState = new MapCell[][] {
-            { new MapCell(0,0,0,0), new MapCell(1,0, 33,0),new MapCell(2,0,66,0), new MapCell(3,0, 100,0) },
-            { new MapCell(0,1,0,33), new MapCell(1,1, 33,33),new MapCell(2,1,66,33), new MapCell(3,1, 100,33) },
-            { new MapCell(0,2,0,66), new MapCell(1,2, 33,66),new MapCell(2,2,66,66), new MapCell(3,2, 100,66) },
-            { new MapCell(0,3,0,100), new MapCell(1,3, 33,100),new MapCell(2,3,66,100), new MapCell(3,3, 100,100) }
-    };*/
 
     public static MapCell[][] createMapState(SimulationLauncher launcher, int width, int length) {
         MapCell[][] mapCell = new MapCell[width][length];
@@ -165,14 +158,13 @@ public class MapState {
     public static MapCell[][] generateWaterBodies(MapCell[][] map){
         map = generateLakes(map);
         map = generateRivers(map);
-
         return map;
     }
 
     public static MapCell[][] generateLakes(MapCell[][] map){
         Random rand = new Random();
 
-        int numOfLakes = rand.nextInt(map.length * map[0].length / 5000);
+        int numOfLakes = (int)Math.sqrt(rand.nextInt(map.length * map[0].length / 5000));
         int lakeMaximumRadius = 12;
 
         int[][] lakePositions = new int[numOfLakes][2];
@@ -224,13 +216,15 @@ public class MapState {
             for(int m = minX; m < maxX; m++){
                 for(int n = minY; n < maxY; n++){
                     if(calculateDist(lakePositions[i][0], lakePositions[i][1], m, n) < lakeRadius/2){//perto do centro
-                        map[m][n].setVegetationDensity(0);
-                        map[m][n].setHumidityPercentage(100);
-                        map[m][n].setSoilType(3);
+                        if(m >= 0 && n >= 0 && m < map.length && n < map[0].length){
+                            map[m][n].setVegetationDensity(0);
+                            map[m][n].setHumidityPercentage(100);
+                            map[m][n].setSoilType(3);
+                        }
                     }
                     else{
                         int r = rand.nextInt(lakeRadius);
-                        if(calculateDist(lakePositions[i][0], lakePositions[i][1], m, n) < r){
+                        if(calculateDist(lakePositions[i][0], lakePositions[i][1], m, n) < r && m >= 0 && n >= 0 && m < map.length && n < map[0].length){
                             map[m][n].setVegetationDensity(0);
                             map[m][n].setHumidityPercentage(100);
                             map[m][n].setSoilType(3);
@@ -246,10 +240,8 @@ public class MapState {
     public static MapCell[][] generateRivers(MapCell[][] map){
         Random rand = new Random();
 
-        int numOfRivers = rand.nextInt(2);
+        int numOfRivers = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 10000));
         int riverMaximumWidth = 6;
-
-        System.out.println("Number of Rivers = " + numOfRivers);
 
         int[][] riverPositions = new int[numOfRivers][2];
 
@@ -264,56 +256,46 @@ public class MapState {
         for(int i = 0; i < numOfRivers; i++) {
             int riverWidth = rand.nextInt(riverMaximumWidth) + 1;
 
-            System.out.println("River Width: " + riverWidth);
-
-            System.out.println("River Center X = " + riverPositions[i][0]);
-            System.out.println("River Center Y = " + riverPositions[i][1]);
-
             //river position
             map[riverPositions[i][0]][riverPositions[i][1]].setVegetationDensity(0);
             map[riverPositions[i][0]][riverPositions[i][1]].setHumidityPercentage(100);
             map[riverPositions[i][0]][riverPositions[i][1]].setSoilType(3);
 
             //river generation
-
-            //South/North
-                //river width
-
-            //2 problems
-                //riverwidth = 1, rio reto
-
-                //river going out of map
-
-            int riverMinX = riverPositions[i][0] - (riverWidth - 1)/2;   // 1:0 , 2:0 , 3:1 , 4:1 , 5:2 , 6:2
-            int riverMaxX = riverPositions[i][0] + riverWidth/2;         // 1:0 , 2:1 , 3:1 , 4:2 , 5:2 , 6:3
+            int riverMinX = riverPositions[i][0] - (riverWidth - 1)/2;
+            int riverMaxX = riverPositions[i][0] + riverWidth/2;
             riverPositions[i][1] = map[0].length - 1;
 
             int deviation = 0;
+            int riverOrientation = 1;//rand.nextInt(3);
 
             for(int n = riverPositions[i][1]; n >= 0; n--){
                 for(int m = riverMinX; m <= riverMaxX; m++){
-
-
-                    map[m + deviation][n].setVegetationDensity(0);
-                    map[m + deviation][n].setHumidityPercentage(100);
-                    map[m + deviation][n].setSoilType(3);
-
+                    if(m + deviation >= 0 && n >= 0 && m + deviation < map.length && n < map[0].length){
+                        map[m + deviation][n].setVegetationDensity(0);
+                        map[m + deviation][n].setHumidityPercentage(100);
+                        map[m + deviation][n].setSoilType(3);
+                    }
 
                 }
                 if(riverWidth == 1){
-                    deviation += rand.nextInt(riverWidth + 2) - riverWidth;
+                    deviation += rand.nextInt(riverWidth + 2) - riverWidth - 1;
                 }
                 else{
-                    deviation += rand.nextInt(riverWidth + 1) - riverWidth/2;
+                    if(riverOrientation == 0){// NW/SE
+                        deviation += rand.nextInt(riverWidth + 1) - riverWidth/2 - 1;
+                    }
+                    else if(riverOrientation == 2){// NE/SW
+                        deviation += rand.nextInt(riverWidth + 1) - riverWidth/2 + 1;
+                    }
+                    else{
+                        deviation += rand.nextInt(riverWidth + 1) - riverWidth/2;
+                    }
                 }
-
-                //System.out.println(deviation);
-
             }
-
         }
 
-            return map;
+        return map;
     }
 
     public static int calculateDist(int x1, int y1, int x2, int y2){
