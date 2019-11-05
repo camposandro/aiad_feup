@@ -279,7 +279,7 @@ public class MapState {
 
                 }
                 if(riverWidth == 1){
-                    deviation += rand.nextInt(riverWidth + 2) - riverWidth - 1;
+                    deviation += rand.nextInt(riverWidth + 2) - riverWidth;
                 }
                 else{
                     if(riverOrientation == 0){// NW/SE
