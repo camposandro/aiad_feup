@@ -246,7 +246,7 @@ public class MapState {
     public static MapCell[][] generateRivers(MapCell[][] map){
         Random rand = new Random();
 
-        int numOfRivers = rand.nextInt(map.length * map[0].length / 10000);
+        int numOfRivers = rand.nextInt(2);
         int riverMaximumWidth = 6;
 
         System.out.println("Number of Rivers = " + numOfRivers);
