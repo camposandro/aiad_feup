@@ -254,19 +254,20 @@ public class MapState {
         int[][] riverPositions = new int[numOfRivers][2];
 
         for(int i = 0; i < numOfRivers; i++){
-            int lakeX = rand.nextInt(map.length);
-            int lakeY = rand.nextInt(map[0].length);
+            int riverX = rand.nextInt(map.length);
+            int riverY = rand.nextInt(map[0].length);
 
-            riverPositions[i][0] = lakeX;
-            riverPositions[i][1] = lakeY;
+            riverPositions[i][0] = riverX;
+            riverPositions[i][1] = riverY;
         }
 
         for(int i = 0; i < numOfRivers; i++) {
-            int riverWidth = rand.nextInt(riverMaximumWidth);
+            int riverWidth = rand.nextInt(riverMaximumWidth) + 1;
 
+            System.out.println("River Width: " + riverWidth);
 
-            System.out.println("River X = " + riverPositions[i][0]);
-            System.out.println("River Y = " + riverPositions[i][1]);
+            System.out.println("River Center X = " + riverPositions[i][0]);
+            System.out.println("River Center Y = " + riverPositions[i][1]);
 
             //river position
             map[riverPositions[i][0]][riverPositions[i][1]].setVegetationDensity(0);
@@ -274,8 +275,37 @@ public class MapState {
             map[riverPositions[i][0]][riverPositions[i][1]].setSoilType(3);
 
             //river generation
-        }
 
+            //South/North
+                //river width
+
+            //2 problems
+                //riverwidth = 1, rio reto
+
+                //river going out of map
+
+            int riverMinX = riverPositions[i][0] - (riverWidth - 1)/2;   // 1:0 , 2:0 , 3:1 , 4:1 , 5:2 , 6:2
+            int riverMaxX = riverPositions[i][0] + riverWidth/2;         // 1:0 , 2:1 , 3:1 , 4:2 , 5:2 , 6:3
+            riverPositions[i][1] = map[0].length - 1;
+
+            int deviation = 0;
+
+            for(int n = riverPositions[i][1]; n >= 0; n--){
+                for(int m = riverMinX; m <= riverMaxX; m++){
+
+
+                    map[m + deviation][n].setVegetationDensity(0);
+                    map[m + deviation][n].setHumidityPercentage(100);
+                    map[m + deviation][n].setSoilType(3);
+
+
+                }
+                deviation += rand.nextInt(riverWidth) - riverWidth/2;
+                //System.out.println(deviation);
+
+            }
+
+        }
 
             return map;
     }
