@@ -50,13 +50,15 @@ public class MapCell extends MyAgent {
             a = Color.getHSBColor(h, s, v);
         }
         else if (soilType == 1) { //asphalt
-            a = Color.getHSBColor(0, 0, 0);
+            a = new Color(60, 60, 60);
         } else if (soilType == 2) { //dirt
             a = new Color(230, 182, 115);
-        } else if (soilType == 3) { //dirt
+        } else if (soilType == 3) { //watter
             a = new Color(147, 176, 204);
-        } else if (soilType == 4) { //dirt
+        } else if (soilType == 4) { //houses
             a = new Color(140, 45, 25);
+        } else if (soilType == 5) { //centralSquare
+            a = new Color(200, 200, 200);
         } else {
             h = humidityPercentage * 100 / 360 * 0.003f + 0.15f;
             s = (vegetationDensity * 0.5f + 50) * 0.01f;
@@ -126,6 +128,10 @@ public class MapCell extends MyAgent {
     public void setSoilType(int soilType) {
         this.soilType = soilType;
         setColor(this.calcColor());
+    }
+
+    public int getSoilType(){
+        return this.soilType;
     }
 
     public int getBurnedPercentage() {
