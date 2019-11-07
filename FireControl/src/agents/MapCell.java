@@ -74,11 +74,10 @@ public class MapCell extends MyAgent {
     private MapCell[] getNeighbours() {
         MapCell[] neighbours = new MapCell[4];
 
-        neighbours[0] = launcher.getState()[x][y+1];
-        neighbours[1] = launcher.getState()[x][y-1];
-        neighbours[2] = launcher.getState()[x-1][y];
-        neighbours[3] = launcher.getState()[x+1][y];
-        //System.out.println(launcher.getStatePos(1,1));
+        neighbours[0] = launcher.getStatePos(x,y+1);
+        neighbours[1] = launcher.getStatePos(x,y-1);
+        neighbours[2] = launcher.getStatePos(x-1,y);
+        neighbours[3] = launcher.getStatePos(x+1,y);
         return neighbours;
 
     }
@@ -185,9 +184,6 @@ public class MapCell extends MyAgent {
 
         protected void onTick() {
 
-
-            //System.out.println(launcher.getState()[2][2]);
-            //launcher.getState()[x][y].setBurnedPercentage(burnedPercentage + 10);
             if (onFire) {
                 if (burnedPercentage == 100) {
                     onFire = false;
@@ -196,10 +192,10 @@ public class MapCell extends MyAgent {
 
                 MapCell[] neighbours = getNeighbours();
                 for(int i = 0; i < 4; i++) {
-                    neighbours[i].catchFireProbability(ThreadLocalRandom.current().nextInt(75, 100));
+                    if(neighbours[i] != null)
+                        neighbours[i].catchFireProbability(ThreadLocalRandom.current().nextInt(0, 100));
                 }
                 setBurnedPercentage(burnedPercentage + 10);
-                System.out.println(burnedPercentage);
                 setColor(calcColor());
             }
         }

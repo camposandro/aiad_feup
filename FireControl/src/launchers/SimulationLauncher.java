@@ -31,8 +31,8 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private DisplaySurface displaySurface;
     private Object2DGrid environment;   // Minimum size             = 150x75
-    private int envWidth = 200;         // Recomended size          = 200x100
-    private int envHeight = 100;        // Recommended maximum size = 800X400
+    private int envWidth = 100;         // Recomended size          = 200x100
+    private int envHeight = 120;        // Recommended maximum size = 800X400
                                         // Absoulute Repast Maximum = 1200x600
     private MapCell[][] state;
 
@@ -66,9 +66,9 @@ public class SimulationLauncher extends Repast3Launcher {
         setDisplaySurface(new DisplaySurface(this, displaySurfaceName));
         registerDisplaySurface(displaySurfaceName, displaySurface);
 
-        state = MapState.createMapState(this,envWidth,envHeight,50,50);
+        //state = MapState.createMapState(this,envWidth,envHeight,99,99);
 
-        //state = MapState.createMapState(this,envWidth,envHeight,ThreadLocalRandom.current().nextInt(0, envWidth),ThreadLocalRandom.current().nextInt(0, envHeight));
+        state = MapState.createMapState(this,envWidth,envHeight,ThreadLocalRandom.current().nextInt(0, envWidth),ThreadLocalRandom.current().nextInt(0, envHeight));
         //genFire();
     }
 
@@ -280,6 +280,8 @@ public class SimulationLauncher extends Repast3Launcher {
         return state;
     }
     public  MapCell getStatePos(int x, int y) {
+        if(x < 0 || y < 0 || x >= envWidth || y >= envHeight)
+            return null;
         return state[x][y];
     }
 
