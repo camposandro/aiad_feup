@@ -1,20 +1,21 @@
 package utils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import agents.MapCell;
 import launchers.SimulationLauncher;
 
 public class MapState {
-    public static List<MapCell> fireCell = new ArrayList<>();
+    public static HashSet<MapCell> fireCell = new HashSet<>();
 
     public static MapCell[][] createMapState(SimulationLauncher launcher, int width, int length, int fireX, int fireY) {
         MapCell[][] mapCell = new MapCell[width][length];
         Random rand = new Random();
 
-        int randVeg = rand.nextInt(100);
-        int randHum = rand.nextInt(100);
+        int randVeg = rand.nextInt(99) + 1;
+        int randHum = rand.nextInt(99);
 
         int newVeg;
         int newHum;
@@ -40,7 +41,7 @@ public class MapState {
                         vegMin = mapCell[i-1][j].getVegetationDensity() - range;
                     }
                     else if(mapCell[i-1][j].getVegetationDensity() - range < 0){
-                        vegMin = 0;
+                        vegMin = 1;
                         vegMax = mapCell[i-1][j].getVegetationDensity() + range;
                     }
                     else{
@@ -50,7 +51,7 @@ public class MapState {
 
 
                     if(mapCell[i-1][j].getHumidityPercentage() + range > 100){
-                        humMax = 100;
+                        humMax = 99;
                         humMin = mapCell[i-1][j].getHumidityPercentage() - range;
                     }
                     else if(mapCell[i-1][j].getHumidityPercentage() - range < 0){
@@ -62,9 +63,10 @@ public class MapState {
                         humMax = mapCell[i-1][j].getHumidityPercentage() + range;
                     }
 
-
                     newVeg = rand.nextInt(vegMax - vegMin) + vegMin;
                     newHum = rand.nextInt(humMax - humMin) + humMin;
+                    if(newVeg == 0)
+                        newVeg = 1;
 
 
                     mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0, false);

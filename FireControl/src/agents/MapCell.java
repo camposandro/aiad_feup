@@ -92,11 +92,10 @@ public class MapCell extends MyAgent {
         if (burnedPercentage == 100) {
             return;
         }
-        if (random < vegetationDensity * (100 - humidityPercentage)) {
+        if (random <= vegetationDensity * (100 - humidityPercentage)) {
             this.onFire = true;
             setColor(this.calcColor());
             MapState.fireCell.add(this);
-
         }
     }
 
@@ -201,7 +200,7 @@ public class MapCell extends MyAgent {
                 if(neighbours[i] != null)
                     neighbours[i].catchFireProbability(ThreadLocalRandom.current().nextInt(0, 100));
             }
-            setBurnedPercentage(burnedPercentage + 20);
+            setBurnedPercentage(burnedPercentage + 5);
             setColor(calcColor());
         }
     }

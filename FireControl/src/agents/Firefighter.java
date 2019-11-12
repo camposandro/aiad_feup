@@ -7,6 +7,8 @@ import uchicago.src.sim.gui.SimGraphics;
 import utils.MapState;
 
 import java.awt.*;
+import java.util.HashSet;
+import java.util.Iterator;
 
 public class Firefighter extends MyAgent {
 
@@ -111,10 +113,17 @@ public class Firefighter extends MyAgent {
         }
         protected void onTick() {
             int size = MapState.fireCell.size();
-            for(int i = 0; i < size; i++)
-                MapState.fireCell.get(i).update();
+            //for(int i = 0; i < size; i++)
+            //    MapState.fireCell.get(i).update();
+            HashSet<MapCell> a = (HashSet)MapState.fireCell.clone();
 
-            updatePerception();
+            Iterator<MapCell> i = a.iterator();
+
+            while (i.hasNext())
+                i.next().update();
+
+
+        updatePerception();
             System.out.println("Dest x: " + destination[0] + " y: " + destination[1] + " position x: " + x + " y: " + y );
 
             switch(currentState) {
