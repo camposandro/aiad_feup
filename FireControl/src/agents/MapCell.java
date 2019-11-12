@@ -4,8 +4,10 @@ import launchers.SimulationLauncher;
 import sajas.core.Agent;
 import sajas.core.behaviours.TickerBehaviour;
 import uchicago.src.sim.gui.SimGraphics;
+import utils.MapState;
 
 import java.awt.*;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 
@@ -39,7 +41,6 @@ public class MapCell extends MyAgent {
         setSoilType(soilType);
         setBurnedPercentage(0);
         setColor(this.calcColor());
-        this.addBehaviour(new MapCellBehaviour(this, 1));
 
     }
 
@@ -94,6 +95,8 @@ public class MapCell extends MyAgent {
         if (random < vegetationDensity * (100 - humidityPercentage)) {
             this.onFire = true;
             setColor(this.calcColor());
+            MapState.fireCell.add(this);
+
         }
     }
 
@@ -185,28 +188,21 @@ public class MapCell extends MyAgent {
         simGraphics.drawRect(getColor());
     }
 
-
-    public class MapCellBehaviour extends TickerBehaviour {
-        public MapCellBehaviour(Agent a, long period) {
-            super(a, period);
-        }
-
-        protected void onTick() {
-
-            if (onFire) {
-                if (burnedPercentage == 100) {
-                    onFire = false;
-                    return;
-                }
-
-                MapCell[] neighbours = getNeighbours();
-                for(int i = 0; i < 4; i++) {
-                    if(neighbours[i] != null)
-                        neighbours[i].catchFireProbability(ThreadLocalRandom.current().nextInt(0, 100));
-                }
-                setBurnedPercentage(burnedPercentage + 10);
-                setColor(calcColor());
+    protected void update() {
+        if (onFire) {
+            //MapState.fireCell.add(this);
+            if (burnedPercentage == 100) {
+                onFire = false;
+                return;
             }
+
+            MapCell[] neighbours = getNeighbours();
+            for(int i = 0; i < 4; i++) {
+                if(neighbours[i] != null)
+                    neighbours[i].catchFireProbability(ThreadLocalRandom.current().nextInt(0, 100));
+            }
+            setBurnedPercentage(burnedPercentage + 20);
+            setColor(calcColor());
         }
     }
 }

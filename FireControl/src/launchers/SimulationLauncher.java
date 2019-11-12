@@ -31,8 +31,8 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private DisplaySurface displaySurface;
     private Object2DGrid environment;   // Minimum size             = 150x75
-    private int envWidth = 200;         // Recommended size          = 200x100
-    private int envHeight = 100;        // Recommended maximum size = 800X400
+    private int envWidth = 25;         // Recommended size          = 200x100
+    private int envHeight = 25;        // Recommended maximum size = 800X400
                                         // Absolute Repast Maximum = 1200x600
     private MapCell[][] state;
 
@@ -41,7 +41,6 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private FireStation fireStation;
     private List<Firefighter> firefighters;
-    //private List<Fire> fires;
 
     private Map<AID, MyAgent> myAgents;
 
@@ -120,7 +119,7 @@ public class SimulationLauncher extends Repast3Launcher {
         for (int i = 0; i < envWidth; i++) {
             for (int j = 0; j < envHeight; j++) {
                 environment.putObjectAt(i,j,state[i][j]);
-                mainContainer.acceptNewAgent("cell-" + i + "-" + j, state[i][j]).start();
+                //mainContainer.acceptNewAgent("cell-" + i + "-" + j, state[i][j]).start();
 
             }
         };

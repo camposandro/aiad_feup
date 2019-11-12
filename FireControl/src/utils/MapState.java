@@ -1,17 +1,20 @@
 package utils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import agents.MapCell;
 import launchers.SimulationLauncher;
 
 public class MapState {
+    public static List<MapCell> fireCell = new ArrayList<>();
 
     public static MapCell[][] createMapState(SimulationLauncher launcher, int width, int length, int fireX, int fireY) {
         MapCell[][] mapCell = new MapCell[width][length];
         Random rand = new Random();
 
-        int randVeg = rand.nextInt(101);
-        int randHum = rand.nextInt(101);
+        int randVeg = rand.nextInt(100);
+        int randHum = rand.nextInt(100);
 
         int newVeg;
         int newHum;
@@ -149,7 +152,7 @@ public class MapState {
             //Generate Dirt Roads
 
 
-
+        fireCell.add(mapCell[fireX][fireY]);
 
         return mapCell;
 

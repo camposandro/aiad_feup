@@ -4,6 +4,7 @@ import launchers.SimulationLauncher;
 import sajas.core.Agent;
 import sajas.core.behaviours.TickerBehaviour;
 import uchicago.src.sim.gui.SimGraphics;
+import utils.MapState;
 
 import java.awt.*;
 
@@ -109,6 +110,10 @@ public class Firefighter extends MyAgent {
             agent = a;
         }
         protected void onTick() {
+            int size = MapState.fireCell.size();
+            for(int i = 0; i < size; i++)
+                MapState.fireCell.get(i).update();
+
             updatePerception();
             System.out.println("Dest x: " + destination[0] + " y: " + destination[1] + " position x: " + x + " y: " + y );
 
