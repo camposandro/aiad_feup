@@ -163,8 +163,10 @@ public class MapState {
 
     public static MapCell[][] generateLakes(MapCell[][] map){
         Random rand = new Random();
+        int numOfLakes = 0;
+        if(map.length * map[0].length > 5000)
+            numOfLakes = (int)Math.sqrt(rand.nextInt(map.length * map[0].length / 5000));
 
-        int numOfLakes = (int)Math.sqrt(rand.nextInt(map.length * map[0].length / 5000));
         int lakeMaximumRadius = 12;
 
         int[][] lakePositions = new int[numOfLakes][2];
@@ -239,8 +241,9 @@ public class MapState {
 
     public static MapCell[][] generateRivers(MapCell[][] map){
         Random rand = new Random();
-
-        int numOfRivers = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 10000));
+        int numOfRivers = 0;
+        if(map.length * map[0].length > 10000)
+            numOfRivers = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 10000));
         int riverMaximumWidth = 6;
 
         int[][] riverPositions = new int[numOfRivers][2];
@@ -306,8 +309,10 @@ public class MapState {
     }
     public static MapCell[][] generateVillages(MapCell[][] map){
         Random rand = new Random();
+        int numOfVillages = 0;
+        if(map.length * map[0].length > 5000)
+            numOfVillages = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 5000));
 
-        int numOfVillages = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 5000));
         int maxHousesPerVillage = 32;
         int[] housesPerVillage = new int[numOfVillages];
 

@@ -3,7 +3,6 @@ package agents;
 import launchers.SimulationLauncher;
 import sajas.core.Agent;
 import sajas.core.behaviours.TickerBehaviour;
-import sun.misc.Launcher;
 import uchicago.src.sim.gui.SimGraphics;
 
 import java.awt.*;
