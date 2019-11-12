@@ -4,8 +4,11 @@ import launchers.SimulationLauncher;
 import sajas.core.Agent;
 import sajas.core.behaviours.TickerBehaviour;
 import uchicago.src.sim.gui.SimGraphics;
+import utils.MapState;
 
 import java.awt.*;
+import java.util.HashSet;
+import java.util.Iterator;
 
 public class Firefighter extends MyAgent {
 
@@ -109,7 +112,18 @@ public class Firefighter extends MyAgent {
             agent = a;
         }
         protected void onTick() {
-            updatePerception();
+            int size = MapState.fireCell.size();
+            //for(int i = 0; i < size; i++)
+            //    MapState.fireCell.get(i).update();
+            HashSet<MapCell> a = (HashSet)MapState.fireCell.clone();
+
+            Iterator<MapCell> i = a.iterator();
+
+            while (i.hasNext())
+                i.next().update();
+
+
+        updatePerception();
             System.out.println("Dest x: " + destination[0] + " y: " + destination[1] + " position x: " + x + " y: " + y );
 
             switch(currentState) {

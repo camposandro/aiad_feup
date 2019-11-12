@@ -41,7 +41,6 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private FireStation fireStation;
     private List<Firefighter> firefighters;
-    //private List<Fire> fires;
 
     private Map<AID, MyAgent> myAgents;
 
@@ -120,7 +119,7 @@ public class SimulationLauncher extends Repast3Launcher {
         for (int i = 0; i < envWidth; i++) {
             for (int j = 0; j < envHeight; j++) {
                 environment.putObjectAt(i,j,state[i][j]);
-                mainContainer.acceptNewAgent("cell-" + i + "-" + j, state[i][j]).start();
+                //mainContainer.acceptNewAgent("cell-" + i + "-" + j, state[i][j]).start();
 
             }
         };
