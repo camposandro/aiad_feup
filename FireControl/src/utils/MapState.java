@@ -331,6 +331,9 @@ public class MapState {
         //generate central squares
         map = generateCentralSquares(map, villagePositions, housesPerVillage);
 
+        map = generateSurroundingStreets(map, villagePositions, housesPerVillage);
+        map = generateSurroundingHouses(map, villagePositions, housesPerVillage);
+
 
 
         return map;
@@ -643,6 +646,181 @@ public class MapState {
 
         return map;
     }
+
+
+    public static MapCell[][] generateSurroundingStreets(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
+        int numOfVillages = villagePositions.length;
+        Random rand = new Random();
+
+        int[] upperLeftCentralSquare = new int[2];
+        int[] upperRightCentralSquare = new int[2];
+        int[] downerLeftCentralSquare = new int[2];
+        int[] downerRightCentralSquare = new int[2];
+
+        int streetLength;
+        int streetOrientation;
+
+        for(int i = 0; i < numOfVillages; i++){
+            if(housesPerVillage[i] < 15){
+                upperLeftCentralSquare[0] = villagePositions[i][0] - 1;
+                upperLeftCentralSquare[1] = villagePositions[i][1] - 1;
+
+                upperRightCentralSquare[0] = villagePositions[i][0] + 1;
+                upperRightCentralSquare[1] = villagePositions[i][1] - 1;
+
+                downerLeftCentralSquare[0] = villagePositions[i][0] - 1;
+                downerLeftCentralSquare[1] = villagePositions[i][1] + 1;
+
+                downerRightCentralSquare[0] = villagePositions[i][0] + 1;
+                downerRightCentralSquare[1] = villagePositions[i][1] + 1;
+            }
+            else if(housesPerVillage[i] >= 15 && housesPerVillage[i] < 20){
+                upperLeftCentralSquare[0] = villagePositions[i][0] - 1;
+                upperLeftCentralSquare[1] = villagePositions[i][1] - 1;
+
+                upperRightCentralSquare[0] = villagePositions[i][0] + 2;
+                upperRightCentralSquare[1] = villagePositions[i][1] - 1;
+
+                downerLeftCentralSquare[0] = villagePositions[i][0] - 1;
+                downerLeftCentralSquare[1] = villagePositions[i][1] + 1;
+
+                downerRightCentralSquare[0] = villagePositions[i][0] + 2;
+                downerRightCentralSquare[1] = villagePositions[i][1] + 1;
+            }
+            else if(housesPerVillage[i] >= 20 && housesPerVillage[i] < 25){
+                upperLeftCentralSquare[0] = villagePositions[i][0] - 1;
+                upperLeftCentralSquare[1] = villagePositions[i][1] - 1;
+
+                upperRightCentralSquare[0] = villagePositions[i][0] + 2;
+                upperRightCentralSquare[1] = villagePositions[i][1] - 1;
+
+                downerLeftCentralSquare[0] = villagePositions[i][0] - 1;
+                downerLeftCentralSquare[1] = villagePositions[i][1] + 2;
+
+                downerRightCentralSquare[0] = villagePositions[i][0] + 2;
+                downerRightCentralSquare[1] = villagePositions[i][1] + 2;
+            }
+            else if(housesPerVillage[i] >= 25 && housesPerVillage[i] < 30){
+                upperLeftCentralSquare[0] = villagePositions[i][0] - 2;
+                upperLeftCentralSquare[1] = villagePositions[i][1] - 1;
+
+                upperRightCentralSquare[0] = villagePositions[i][0] + 2;
+                upperRightCentralSquare[1] = villagePositions[i][1] - 1;
+
+                downerLeftCentralSquare[0] = villagePositions[i][0] - 2;
+                downerLeftCentralSquare[1] = villagePositions[i][1] + 2;
+
+                downerRightCentralSquare[0] = villagePositions[i][0] + 2;
+                downerRightCentralSquare[1] = villagePositions[i][1] + 2;
+            }
+            else{
+                upperLeftCentralSquare[0] = villagePositions[i][0] - 2;
+                upperLeftCentralSquare[1] = villagePositions[i][1] - 2;
+
+                upperRightCentralSquare[0] = villagePositions[i][0] + 2;
+                upperRightCentralSquare[1] = villagePositions[i][1] - 2;
+
+                downerLeftCentralSquare[0] = villagePositions[i][0] - 2;
+                downerLeftCentralSquare[1] = villagePositions[i][1] + 2;
+
+                downerRightCentralSquare[0] = villagePositions[i][0] + 2;
+                downerRightCentralSquare[1] = villagePositions[i][1] + 2;
+            }
+
+            /*
+            map[upperLeftCentralSquare[0] - 1][upperLeftCentralSquare[1]].setVegetationDensity(0);
+            map[upperLeftCentralSquare[0] - 1][upperLeftCentralSquare[1]].setHumidityPercentage(100);
+            map[upperLeftCentralSquare[0] - 1][upperLeftCentralSquare[1]].setSoilType(1);
+
+            map[upperRightCentralSquare[0] + 1][upperRightCentralSquare[1]].setVegetationDensity(0);
+            map[upperRightCentralSquare[0] + 1][upperRightCentralSquare[1]].setHumidityPercentage(100);
+            map[upperRightCentralSquare[0] + 1][upperRightCentralSquare[1]].setSoilType(1);
+
+            map[downerLeftCentralSquare[0] - 1][downerLeftCentralSquare[1]].setVegetationDensity(0);
+            map[downerLeftCentralSquare[0] - 1][downerLeftCentralSquare[1]].setHumidityPercentage(100);
+            map[downerLeftCentralSquare[0] - 1][downerLeftCentralSquare[1]].setSoilType(1);
+
+            map[downerRightCentralSquare[0] + 1][downerRightCentralSquare[1]].setVegetationDensity(0);
+            map[downerRightCentralSquare[0] + 1][downerRightCentralSquare[1]].setHumidityPercentage(100);
+            map[downerRightCentralSquare[0] + 1][downerRightCentralSquare[1]].setSoilType(1);*/
+
+            for(int j = 0; j < 4; j++){
+                streetLength = rand.nextInt(housesPerVillage[i]/2);
+                streetOrientation = rand.nextInt(2);
+
+                if(j == 0){ //Uper Left
+                    for(int n = 0; n < streetLength; n++){
+                        if(streetOrientation == 0){//Vertical
+                            map[upperLeftCentralSquare[0]][upperLeftCentralSquare[1] - (n + 1)].setVegetationDensity(0);
+                            map[upperLeftCentralSquare[0]][upperLeftCentralSquare[1] - (n + 1)].setHumidityPercentage(100);
+                            map[upperLeftCentralSquare[0]][upperLeftCentralSquare[1] - (n + 1)].setSoilType(1);
+                        }
+                        else{//Horizontal
+                            map[upperLeftCentralSquare[0] - (n + 1)][upperLeftCentralSquare[1]].setVegetationDensity(0);
+                            map[upperLeftCentralSquare[0] - (n + 1)][upperLeftCentralSquare[1]].setHumidityPercentage(100);
+                            map[upperLeftCentralSquare[0] - (n + 1)][upperLeftCentralSquare[1]].setSoilType(1);
+                        }
+                    }
+                }
+                else if(j == 1){//Uper Right
+                    for(int n = 0; n < streetLength; n++){
+                        if(streetOrientation == 0){//Vertical
+                            map[upperRightCentralSquare[0]][upperRightCentralSquare[1] - (n + 1)].setVegetationDensity(0);
+                            map[upperRightCentralSquare[0]][upperRightCentralSquare[1] - (n + 1)].setHumidityPercentage(100);
+                            map[upperRightCentralSquare[0]][upperRightCentralSquare[1] - (n + 1)].setSoilType(1);
+                        }
+                        else{//Horizontal
+                            map[upperRightCentralSquare[0] + (n + 1)][upperRightCentralSquare[1]].setVegetationDensity(0);
+                            map[upperRightCentralSquare[0] + (n + 1)][upperRightCentralSquare[1]].setHumidityPercentage(100);
+                            map[upperRightCentralSquare[0] + (n + 1)][upperRightCentralSquare[1]].setSoilType(1);
+                        }
+                    }
+                }
+                else if(j == 2){//Downer Left
+                    for(int n = 0; n < streetLength; n++){
+                        if(streetOrientation == 0){//Vertical
+                            map[downerLeftCentralSquare[0]][downerLeftCentralSquare[1] + (n + 1)].setVegetationDensity(0);
+                            map[downerLeftCentralSquare[0]][downerLeftCentralSquare[1] + (n + 1)].setHumidityPercentage(100);
+                            map[downerLeftCentralSquare[0]][downerLeftCentralSquare[1] + (n + 1)].setSoilType(1);
+                        }
+                        else{//Horizontal
+                            map[downerLeftCentralSquare[0] - (n + 1)][downerLeftCentralSquare[1]].setVegetationDensity(0);
+                            map[downerLeftCentralSquare[0] - (n + 1)][downerLeftCentralSquare[1]].setHumidityPercentage(100);
+                            map[downerLeftCentralSquare[0] - (n + 1)][downerLeftCentralSquare[1]].setSoilType(1);
+                        }
+                    }
+                }
+                else{//Downer Right
+                    for(int n = 0; n < streetLength; n++){
+                        if(streetOrientation == 0){//Vertical
+                            map[downerRightCentralSquare[0]][downerRightCentralSquare[1] + (n + 1)].setVegetationDensity(0);
+                            map[downerRightCentralSquare[0]][downerRightCentralSquare[1] + (n + 1)].setHumidityPercentage(100);
+                            map[downerRightCentralSquare[0]][downerRightCentralSquare[1] + (n + 1)].setSoilType(1);
+                        }
+                        else{//Horizontal
+                            map[downerRightCentralSquare[0] + (n + 1)][downerRightCentralSquare[1]].setVegetationDensity(0);
+                            map[downerRightCentralSquare[0] + (n + 1)][downerRightCentralSquare[1]].setHumidityPercentage(100);
+                            map[downerRightCentralSquare[0] + (n + 1)][downerRightCentralSquare[1]].setSoilType(1);
+                        }
+                    }
+                }
+            }
+
+
+
+
+        }
+
+
+        return map;
+    }
+
+    public static MapCell[][] generateSurroundingHouses(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
+        //TO DO
+
+        return map;
+    }
+
 
     public static int calculateDist(int x1, int y1, int x2, int y2){
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
