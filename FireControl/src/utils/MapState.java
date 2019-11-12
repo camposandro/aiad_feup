@@ -732,28 +732,11 @@ public class MapState {
                 downerRightCentralSquare[1] = villagePositions[i][1] + 2;
             }
 
-            /*
-            map[upperLeftCentralSquare[0] - 1][upperLeftCentralSquare[1]].setVegetationDensity(0);
-            map[upperLeftCentralSquare[0] - 1][upperLeftCentralSquare[1]].setHumidityPercentage(100);
-            map[upperLeftCentralSquare[0] - 1][upperLeftCentralSquare[1]].setSoilType(1);
-
-            map[upperRightCentralSquare[0] + 1][upperRightCentralSquare[1]].setVegetationDensity(0);
-            map[upperRightCentralSquare[0] + 1][upperRightCentralSquare[1]].setHumidityPercentage(100);
-            map[upperRightCentralSquare[0] + 1][upperRightCentralSquare[1]].setSoilType(1);
-
-            map[downerLeftCentralSquare[0] - 1][downerLeftCentralSquare[1]].setVegetationDensity(0);
-            map[downerLeftCentralSquare[0] - 1][downerLeftCentralSquare[1]].setHumidityPercentage(100);
-            map[downerLeftCentralSquare[0] - 1][downerLeftCentralSquare[1]].setSoilType(1);
-
-            map[downerRightCentralSquare[0] + 1][downerRightCentralSquare[1]].setVegetationDensity(0);
-            map[downerRightCentralSquare[0] + 1][downerRightCentralSquare[1]].setHumidityPercentage(100);
-            map[downerRightCentralSquare[0] + 1][downerRightCentralSquare[1]].setSoilType(1);*/
-
             for(int j = 0; j < 4; j++){
                 streetLength = rand.nextInt(housesPerVillage[i]/2);
                 streetOrientation = rand.nextInt(2);
 
-                if(j == 0){ //Uper Left
+                if(j == 0){ //Upper Left
                     for(int n = 0; n < streetLength; n++){
                         if(streetOrientation == 0){//Vertical
                             map[upperLeftCentralSquare[0]][upperLeftCentralSquare[1] - (n + 1)].setVegetationDensity(0);
@@ -767,7 +750,7 @@ public class MapState {
                         }
                     }
                 }
-                else if(j == 1){//Uper Right
+                else if(j == 1){//Upper Right
                     for(int n = 0; n < streetLength; n++){
                         if(streetOrientation == 0){//Vertical
                             map[upperRightCentralSquare[0]][upperRightCentralSquare[1] - (n + 1)].setVegetationDensity(0);
@@ -810,18 +793,71 @@ public class MapState {
                     }
                 }
             }
-
-
-
-
         }
 
+        map = generateMainRoads(map, villagePositions, housesPerVillage);
 
         return map;
     }
 
     public static MapCell[][] generateSurroundingHouses(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
         //TO DO
+
+        return map;
+    }
+
+    public static MapCell[][] generateMainRoads(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
+        int numOfVillages = villagePositions.length;
+        Random rand = new Random();
+
+        int[] villageUpperLeft = new int[2];
+        int[] villageDownerRight = new int[2];
+        int[] mainRoadConnection = new int[2];
+        int mainRoadMinimumDistanceToCentralSquareX = 1, mainRoadMinimumDistanceToCentralSquareY = 1;
+
+        for(int i = 0; i < numOfVillages; i++){
+            villageUpperLeft[0] = villagePositions[i][0] - housesPerVillage[i]/2 + 1;
+            villageUpperLeft[1] = villagePositions[i][1] - housesPerVillage[i]/2 + 1;
+
+            villageDownerRight[0] = villagePositions[i][0] + housesPerVillage[i]/2 + 1;
+            villageDownerRight[1] = villagePositions[i][1] + housesPerVillage[i]/2 + 1;
+
+            if(housesPerVillage[i] < 15){
+                mainRoadMinimumDistanceToCentralSquareX = 1;
+                mainRoadMinimumDistanceToCentralSquareY = 1;
+            }
+            else if(housesPerVillage[i] >= 15 && housesPerVillage[i] < 20){
+                mainRoadMinimumDistanceToCentralSquareX = 2;
+                mainRoadMinimumDistanceToCentralSquareY = 1;
+            }
+            else{
+                mainRoadMinimumDistanceToCentralSquareX = 2;
+                mainRoadMinimumDistanceToCentralSquareY = 2;
+            }
+
+            while(mainRoadConnection[0] == 0 && mainRoadConnection[1] == 0){
+                for(int n = villageUpperLeft[0] - 1; n < villageDownerRight[0]; n++){
+                    for(int m = villageUpperLeft[1] - 1; m < villageDownerRight[1]; m++){
+                        if(((n <= villagePositions[i][0] - mainRoadMinimumDistanceToCentralSquareX && m >= villagePositions[i][1] + mainRoadMinimumDistanceToCentralSquareY) || (n >= villagePositions[i][0] + mainRoadMinimumDistanceToCentralSquareX && m >= villagePositions[i][1] + mainRoadMinimumDistanceToCentralSquareY) || (m <= villagePositions[i][1] - mainRoadMinimumDistanceToCentralSquareY && n <= villagePositions[i][0] - mainRoadMinimumDistanceToCentralSquareX) || (m <= villagePositions[i][1] - mainRoadMinimumDistanceToCentralSquareY && n >= villagePositions[i][0] + mainRoadMinimumDistanceToCentralSquareX)) && rand.nextInt(housesPerVillage[i]) == 0){
+                            mainRoadConnection[0] = n;
+                            mainRoadConnection[1] = m;
+                        }
+                    }
+                }
+            }
+
+            System.out.println("Main Road Connection = " + mainRoadConnection[0] + " : " + mainRoadConnection[1]);
+
+            map = generateAsphaltRoad(map, mainRoadConnection);
+
+
+        }
+
+        return map;
+    }
+
+    public static MapCell[][] generateAsphaltRoad(MapCell[][] map, int[] mainRoadConnection){
+
 
         return map;
     }
