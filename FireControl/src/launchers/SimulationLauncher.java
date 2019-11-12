@@ -31,7 +31,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private DisplaySurface displaySurface;
     private Object2DGrid environment;   // Minimum size             = 150x75
-    private int envWidth = 100;         // Recomended size          = 200x100
+    private int envWidth = 200;         // Recomended size          = 200x100
     private int envHeight = 100;        // Recommended maximum size = 800X400
                                         // Absoulute Repast Maximum = 1200x600
     private MapCell[][] state;

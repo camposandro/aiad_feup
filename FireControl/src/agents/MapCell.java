@@ -16,6 +16,11 @@ public class MapCell extends MyAgent {
     private int vegetationDensity;
     private int humidityPercentage;
     private int burnedPercentage;
+
+    public boolean isOnFire() {
+        return onFire;
+    }
+
     private boolean onFire = false;
     private int soilType; //0 - vegetation, 1 - asphalt, 2 - dirt, 3 - water, 4 - house
     private Color color;
@@ -145,6 +150,10 @@ public class MapCell extends MyAgent {
 
     public Color getColor() {
         return color;
+    }
+
+    protected void beExtinguished() {
+        this.setOnFire(false);
     }
 
     public void setColor(Color color) {
