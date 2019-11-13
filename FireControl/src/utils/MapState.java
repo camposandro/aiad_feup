@@ -275,7 +275,7 @@ public class MapState {
             riverPositions[i][1] = map[0].length - 1;
 
             int deviation = 0;
-            int riverOrientation = 1;//rand.nextInt(3);
+            int riverOrientation = rand.nextInt(3);
 
             for(int n = riverPositions[i][1]; n >= 0; n--){
                 for(int m = riverMinX; m <= riverMaxX; m++){
@@ -807,7 +807,42 @@ public class MapState {
     }
 
     public static MapCell[][] generateSurroundingHouses(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
-        //TO DO
+        int numOfVillages = villagePositions.length;
+        Random rand = new Random();
+        int numberOfHouses;
+
+        int[] villageUpperLeft = new int[2];
+        int[] villageDownerRight = new int[2];
+
+        for(int i = 0; i < numOfVillages; i++){
+            villageUpperLeft[0] = villagePositions[i][0] - (housesPerVillage[i]/2);
+            villageUpperLeft[1] = villagePositions[i][1] - (housesPerVillage[i]/2);
+
+            villageDownerRight[0] = villagePositions[i][0] + housesPerVillage[i]/2;
+            villageDownerRight[1] = villagePositions[i][1] + housesPerVillage[i]/2;
+
+            numberOfHouses = 0;
+
+            while(numberOfHouses < housesPerVillage[i]) {
+                for (int n = villageUpperLeft[0] - 1; n < villageDownerRight[0]; n++) {
+                    for (int m = villageUpperLeft[1] - 1; m < villageDownerRight[1]; m++) {
+                        if (housesPerVillage[i] >= numberOfHouses && map[n][m].getSoilType() == 0 && nextToRoad(map, n, m) && rand.nextBoolean()) {
+                            map[n][m].setVegetationDensity(0);
+                            map[n][m].setHumidityPercentage(100);
+                            map[n][m].setSoilType(4);
+
+                            numberOfHouses++;
+                        }
+                    }
+                }
+            }
+
+
+
+        }
+
+
+
 
         return map;
     }
@@ -863,58 +898,110 @@ public class MapState {
 
     public static MapCell[][] generateAsphaltRoad(MapCell[][] map, int[] mainRoadConnection){
         Random rand = new Random();
+        boolean roadGeneralDirection = rand.nextBoolean();
         boolean currDirectionVertical = false;
         int nextStraightLength = 0;
         int x = mainRoadConnection[0], y = mainRoadConnection[1];
 
-        //North/West
-        while(x > 0 && y > 0){
-            if(nextStraightLength == 0){
-                currDirectionVertical = rand.nextBoolean();
-                nextStraightLength = rand.nextInt((int)Math.sqrt((map.length + map[0].length)/2) - 5) + 5;
+        if(roadGeneralDirection) {
+            //North/West
+            while (x > 0 && y > 0) {
+                if (nextStraightLength == 0) {
+                    currDirectionVertical = rand.nextBoolean();
+                    nextStraightLength = rand.nextInt((int) Math.sqrt((map.length + map[0].length) / 2) - 5) + 5;
+                }
+
+                if (currDirectionVertical) {
+                    y--;
+                } else {
+                    x--;
+                }
+
+                map[x][y].setVegetationDensity(0);
+                map[x][y].setHumidityPercentage(100);
+                map[x][y].setSoilType(1);
+
+                nextStraightLength--;
             }
 
-            if(currDirectionVertical){
-                y--;
-            }
-            else{
-                x--;
-            }
+            x = mainRoadConnection[0];
+            y = mainRoadConnection[1];
 
-            map[x][y].setVegetationDensity(0);
-            map[x][y].setHumidityPercentage(100);
-            map[x][y].setSoilType(1);
+            //South/East
+            while (x < map.length - 1 && y < map[0].length - 1) {
+                if (nextStraightLength == 0) {
+                    currDirectionVertical = rand.nextBoolean();
+                    nextStraightLength = rand.nextInt((int) Math.sqrt((map.length + map[0].length) / 2) - 5) + 5;
+                }
 
-            nextStraightLength--;
+                if (currDirectionVertical) {
+                    y++;
+                } else {
+                    x++;
+                }
+
+                map[x][y].setVegetationDensity(0);
+                map[x][y].setHumidityPercentage(100);
+                map[x][y].setSoilType(1);
+
+                nextStraightLength--;
+            }
         }
+        else{
+            //North/East
+            while (x < map.length - 1 && y > 0) {
+                if (nextStraightLength == 0) {
+                    currDirectionVertical = rand.nextBoolean();
+                    nextStraightLength = rand.nextInt((int) Math.sqrt((map.length + map[0].length) / 2) - 5) + 5;
+                }
 
-        x = mainRoadConnection[0];
-        y = mainRoadConnection[1];
+                if (currDirectionVertical) {
+                    y--;
+                } else {
+                    x++;
+                }
 
-        //South/East
-        while(x < map.length - 1 && y < map[0].length - 1){
-            if(nextStraightLength == 0){
-                currDirectionVertical = rand.nextBoolean();
-                nextStraightLength = rand.nextInt((int)Math.sqrt((map.length + map[0].length)/2) - 5) + 5;
+                map[x][y].setVegetationDensity(0);
+                map[x][y].setHumidityPercentage(100);
+                map[x][y].setSoilType(1);
+
+                nextStraightLength--;
             }
 
-            if(currDirectionVertical){
-                y++;
-            }
-            else{
-                x++;
-            }
+            x = mainRoadConnection[0];
+            y = mainRoadConnection[1];
 
-            map[x][y].setVegetationDensity(0);
-            map[x][y].setHumidityPercentage(100);
-            map[x][y].setSoilType(1);
+            //South/West
+            while (x > 0 && y < map[0].length - 1) {
+                if (nextStraightLength == 0) {
+                    currDirectionVertical = rand.nextBoolean();
+                    nextStraightLength = rand.nextInt((int) Math.sqrt((map.length + map[0].length) / 2) - 5) + 5;
+                }
 
-            nextStraightLength--;
+                if (currDirectionVertical) {
+                    y++;
+                } else {
+                    x--;
+                }
+
+                map[x][y].setVegetationDensity(0);
+                map[x][y].setHumidityPercentage(100);
+                map[x][y].setSoilType(1);
+
+                nextStraightLength--;
+            }
         }
 
         return map;
     }
 
+    public static boolean nextToRoad(MapCell[][] map, int x, int y){
+        if(map[x-1][y].getSoilType() == 1  || map[x+1][y].getSoilType() == 1 || map[x][y-1].getSoilType() == 1 || map[x][y+1].getSoilType() == 1){
+            return true;
+        }
+
+        return false;
+    }
 
     public static int calculateDist(int x1, int y1, int x2, int y2){
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
