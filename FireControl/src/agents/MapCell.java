@@ -20,12 +20,18 @@ public class MapCell extends MyAgent {
     private int soilType; //0 - vegetation, 1 - asphalt, 2 - dirt, 3 - water, 4 - house
     private Color color;
 
-    public MapCell(SimulationLauncher launcher, int x, int y, int vegetationDensity, int humidityPercentage, int soilType, boolean onFire) {
+    public MapCell(SimulationLauncher launcher, int x, int y) {
+        super(launcher);
+        this.x = x;
+        this.y = y;
+    }
+
+    public MapCell(SimulationLauncher launcher, int x, int y, int vegetationDensity, int humidityPercentage, int soilType) {
         super(launcher);
         setX(x);
         setY(y);
         setIsPrioritary(false);
-        setOnFire(onFire);
+        setOnFire(false);
         setVegetationDensity(vegetationDensity);
         setHumidityPercentage(humidityPercentage);
         setSoilType(soilType);

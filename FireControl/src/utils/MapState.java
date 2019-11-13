@@ -1,12 +1,8 @@
 package utils;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import agents.MapCell;
@@ -18,6 +14,8 @@ public class MapState {
     private static int envWidth;
     private static int envHeight;
 
+    private static List<MapCell> fires = new ArrayList<>();
+
     private static HashSet<MapCell> fireCell = new HashSet<>();
 
     final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -25,7 +23,22 @@ public class MapState {
     public MapState(SimulationLauncher launcher, int envWidth, int envHeight) {
         this.envWidth = envWidth;
         this.envHeight = envHeight;
+
+        // Generate fires
+        Random rand = new Random();
+        int numFires = rand.nextInt(SimulationLauncher.MAX_NUM_FIRES) + 1;
+        for (int i = 0; i < numFires; i++) {
+            MapCell newFireCell;
+            do {
+                int fireX = rand.nextInt(envWidth);
+                int fireY = rand.nextInt(envHeight);
+                newFireCell = new MapCell(launcher,fireX,fireY);
+            } while (fires.contains(newFireCell));
+            fires.add(newFireCell);
+        }
+
         this.grid = createMapState(launcher,envWidth,envHeight);
+
         // Schedule world update
         service.scheduleAtFixedRate(new Runnable() {
             @Override
@@ -57,16 +70,9 @@ public class MapState {
         return fireCell;
     }
 
-    public void updateState() {
-
-    }
-
     public MapCell[][] createMapState(SimulationLauncher launcher, int width, int length) {
         MapCell[][] mapCell = new MapCell[width][length];
         Random rand = new Random();
-
-        int fireX = ThreadLocalRandom.current().nextInt(0, width);
-        int fireY = ThreadLocalRandom.current().nextInt(0, length);
 
         int randVeg = rand.nextInt(99) + 1;
         int randHum = rand.nextInt(99);
@@ -86,7 +92,7 @@ public class MapState {
         for(int i = 0; i < width; i++) {
             for (int j = 0; j < length; j++) {
                 if(i == 0 && j == 0){ // first column &  first row
-                        mapCell[i][j] = new MapCell(launcher,i, j, randVeg, randHum, 0, false);
+                        mapCell[i][j] = new MapCell(launcher,i, j, randVeg, randHum, 0);
                 }
                 else if(j == 0){ // first row
                     if(mapCell[i-1][j].getVegetationDensity() + range > 100){
@@ -119,7 +125,7 @@ public class MapState {
                     if(newVeg == 0)
                         newVeg = 1;
 
-                    mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0, false);
+                    mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0);
                 }
                 else{ // other columns
                     if(i == 0){
@@ -178,11 +184,8 @@ public class MapState {
                     }
                     newVeg = rand.nextInt(vegMax - vegMin) + vegMin;
                     newHum = rand.nextInt(humMax - humMin) + humMin;
-                    boolean onFire = false;
-                    if(i == fireX && j == fireY)
-                        onFire = true;
 
-                    mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0, onFire);
+                    mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0);
                 }
             }
         }
@@ -197,8 +200,13 @@ public class MapState {
         //Generate Asphalt Roads
         //Generate Dirt Roads
 
-        // Generate Fire cell
-        fireCell.add(mapCell[fireX][fireY]);
+        // Generate Fire cells
+        for (int i = 0; i < fires.size(); i++) {
+            MapCell f = fires.get(i);
+            MapCell cell = mapCell[f.getX()][f.getY()];
+            cell.setOnFire(true);
+            fireCell.add(cell);
+        };
 
         return mapCell;
     }

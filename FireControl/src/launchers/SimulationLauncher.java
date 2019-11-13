@@ -22,6 +22,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     // World update fixed rate
     public static int UPDATE_RATE = 1000;
+    public static int MAX_NUM_FIRES = 3;
 
     private Random rand;
 
