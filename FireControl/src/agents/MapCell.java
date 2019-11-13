@@ -1,17 +1,13 @@
 package agents;
 
 import launchers.SimulationLauncher;
-import sajas.core.Agent;
-import sajas.core.behaviours.TickerBehaviour;
 import uchicago.src.sim.gui.SimGraphics;
-import utils.MapState;
 
 import java.awt.*;
-import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-
 public class MapCell extends MyAgent {
+
     private int x;
     private int y;
     private boolean isPrioritary;
@@ -22,13 +18,10 @@ public class MapCell extends MyAgent {
     private boolean onFire = false;
     private int soilType; //0 - vegetation, 1 - asphalt, 2 - dirt, 3 - water, 4 - house
     private Color color;
-    SimulationLauncher launcher;
 
     public MapCell(SimulationLauncher launcher, int x, int y, int vegetationDensity, int humidityPercentage, int soilType, boolean onFire) {
         super(launcher);
-        this.launcher = launcher;
         setX(x);
-        //System.out.println(this.getX());
         setY(y);
         setIsPrioritary(false);
         setOnFire(onFire);
@@ -41,18 +34,13 @@ public class MapCell extends MyAgent {
 
     }
 
-
-
     protected void setProbOfFire( int densitySum){
-
         this.probOfFire = densitySum / 6;
     }
 
     private Color calcColor() {
-
         float h = 0, s = 0, v = 0;
         Color a;
-
         if (onFire) {
             h = 0;
             s = (vegetationDensity * 0.5f + 50) * 0.01f;
@@ -76,24 +64,18 @@ public class MapCell extends MyAgent {
 
             a = Color.getHSBColor(h, s, v);
         }
-
-
         return a;
-    }
-
-    public boolean isOnFire() {
-        return onFire;
     }
 
     private MapCell[] getNeighbours() {
         MapCell[] neighbours = new MapCell[4];
 
-        neighbours[0] = launcher.getStatePos(x,y+1);
-        neighbours[1] = launcher.getStatePos(x,y-1);
-        neighbours[2] = launcher.getStatePos(x-1,y);
-        neighbours[3] = launcher.getStatePos(x+1,y);
-        return neighbours;
+        neighbours[0] = getEnvironment().getMapState().getGridPos(x,y+1);
+        neighbours[1] = getEnvironment().getMapState().getGridPos(x,y-1);
+        neighbours[2] = getEnvironment().getMapState().getGridPos(x-1,y);
+        neighbours[3] = getEnvironment().getMapState().getGridPos(x+1,y);
 
+        return neighbours;
     }
 
     void catchFireProbability(int random) {
@@ -103,10 +85,9 @@ public class MapCell extends MyAgent {
         if (soilType != 3 && random <= probOfFire) {
             this.onFire = true;
             setColor(this.calcColor());
-            MapState.fireCell.add(this);
+            getEnvironment().getMapState().getFirecells().add(this);
         }
     }
-
 
     public boolean isPrioritary() {
         return isPrioritary;
@@ -134,6 +115,10 @@ public class MapCell extends MyAgent {
         this.humidityPercentage = humidityPercentage;
     }
 
+    public boolean isOnFire() {
+        return onFire;
+    }
+
     public void setOnFire(boolean onFire) {
         this.onFire = onFire;
         setColor(this.calcColor());
@@ -155,7 +140,6 @@ public class MapCell extends MyAgent {
     public void setBurnedPercentage(int burnedPercentage) {
         assert burnedPercentage >= 0 && burnedPercentage <= 100;
         this.burnedPercentage = burnedPercentage;
-        //System.out.println(this.burnedPercentage);
     }
 
     public Color getColor() {
@@ -174,16 +158,16 @@ public class MapCell extends MyAgent {
     public int getX() {
         return x;
     }
+
     @Override
     public void setX(int x) {
         this.x = x;
     }
+
     @Override
     public void setY(int y) {
         this.y = y;
     }
-
-
 
     @Override
     public int getY() {
@@ -197,16 +181,16 @@ public class MapCell extends MyAgent {
 
     protected void update() {
         if (onFire) {
-            //MapState.fireCell.add(this);
             if (burnedPercentage == 100) {
                 onFire = false;
                 return;
             }
-
             MapCell[] neighbours = getNeighbours();
             for(int i = 0; i < 4; i++) {
-                if(neighbours[i] != null)
-                    neighbours[i].catchFireProbability(ThreadLocalRandom.current().nextInt(0, 100));
+                if(neighbours[i] != null) {
+                    int fireProbability = ThreadLocalRandom.current().nextInt(0, 100);
+                    neighbours[i].catchFireProbability(fireProbability);
+                }
             }
             setBurnedPercentage(burnedPercentage + 5);
             setColor(calcColor());

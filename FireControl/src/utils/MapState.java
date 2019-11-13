@@ -1,18 +1,50 @@
 package utils;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+
 import agents.MapCell;
 import launchers.SimulationLauncher;
 
 public class MapState {
-    public static HashSet<MapCell> fireCell = new HashSet<>();
+    private MapCell[][] grid;
 
-    public static MapCell[][] createMapState(SimulationLauncher launcher, int width, int length, int fireX, int fireY) {
+    private int envWidth;
+    private int envHeight;
+
+    private HashSet<MapCell> fireCell = new HashSet<>();
+
+    public MapState(SimulationLauncher launcher, int envWidth, int envHeight) {
+        this.envWidth = envWidth;
+        this.envHeight = envHeight;
+        this.grid = createMapState(launcher,envWidth,envHeight);
+    }
+
+    public MapCell[][] getGrid() {
+        return grid;
+    }
+
+    public MapCell getGridPos(int x, int y) {
+        if(x < 0 || y < 0 || x >= envWidth || y >= envHeight)
+            return null;
+        return grid[x][y];
+    }
+
+    public void setGrid(MapCell[][] grid) {
+        this.grid = grid;
+    }
+
+    public HashSet<MapCell> getFirecells() {
+        return fireCell;
+    }
+
+    public MapCell[][] createMapState(SimulationLauncher launcher, int width, int length) {
         MapCell[][] mapCell = new MapCell[width][length];
         Random rand = new Random();
+
+        int fireX = ThreadLocalRandom.current().nextInt(0, width);
+        int fireY = ThreadLocalRandom.current().nextInt(0, length);
 
         int randVeg = rand.nextInt(99) + 1;
         int randHum = rand.nextInt(99);
@@ -34,7 +66,6 @@ public class MapState {
                 if(i == 0 && j == 0){ // first column &  first row
                         mapCell[i][j] = new MapCell(launcher,i, j, randVeg, randHum, 0, false);
                 }
-
                 else if(j == 0){ // first row
                     if(mapCell[i-1][j].getVegetationDensity() + range > 100){
                         vegMax = 100;
@@ -49,7 +80,6 @@ public class MapState {
                         vegMax = mapCell[i-1][j].getVegetationDensity() + range;
                     }
 
-
                     if(mapCell[i-1][j].getHumidityPercentage() + range > 100){
                         humMax = 99;
                         humMin = mapCell[i-1][j].getHumidityPercentage() - range;
@@ -62,16 +92,13 @@ public class MapState {
                         humMin = mapCell[i-1][j].getHumidityPercentage() - range;
                         humMax = mapCell[i-1][j].getHumidityPercentage() + range;
                     }
-
                     newVeg = rand.nextInt(vegMax - vegMin) + vegMin;
                     newHum = rand.nextInt(humMax - humMin) + humMin;
                     if(newVeg == 0)
                         newVeg = 1;
 
-
                     mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0, false);
                 }
-
                 else{ // other columns
                     if(i == 0){
                         if(mapCell[i][j-1].getVegetationDensity() + range > 100){
@@ -86,7 +113,6 @@ public class MapState {
                             vegMin = mapCell[i][j-1].getVegetationDensity() - range;
                             vegMax = mapCell[i][j-1].getVegetationDensity() + range;
                         }
-
 
                         if(mapCell[i][j-1].getHumidityPercentage() + range > 100){
                             humMax = 100;
@@ -115,7 +141,6 @@ public class MapState {
                             vegMax = (mapCell[i-1][j].getVegetationDensity() + mapCell[i][j-1].getVegetationDensity())/2 + range;
                         }
 
-
                         if((mapCell[i-1][j].getHumidityPercentage() + mapCell[i][j-1].getHumidityPercentage())/2 + range > 100){
                             humMax = 100;
                             humMin = (mapCell[i-1][j].getHumidityPercentage() + mapCell[i][j-1].getHumidityPercentage())/2 - range;
@@ -129,8 +154,6 @@ public class MapState {
                             humMax = (mapCell[i-1][j].getHumidityPercentage() + mapCell[i][j-1].getHumidityPercentage())/2 + range;
                         }
                     }
-
-
                     newVeg = rand.nextInt(vegMax - vegMin) + vegMin;
                     newHum = rand.nextInt(humMax - humMin) + humMin;
                     boolean onFire = false;
@@ -149,24 +172,22 @@ public class MapState {
         mapCell = generateHousesAndRoads(mapCell);
 
         //Generate Roads
-            //Generate Asphalt Roads
+        //Generate Asphalt Roads
+        //Generate Dirt Roads
 
-            //Generate Dirt Roads
-
-
+        // Generate Fire cell
         fireCell.add(mapCell[fireX][fireY]);
 
         return mapCell;
-
     }
 
-    public static MapCell[][] generateWaterBodies(MapCell[][] map){
+    public MapCell[][] generateWaterBodies(MapCell[][] map){
         map = generateLakes(map);
         map = generateRivers(map);
         return map;
     }
 
-    public static MapCell[][] generateLakes(MapCell[][] map){
+    public MapCell[][] generateLakes(MapCell[][] map){
         Random rand = new Random();
         int numOfLakes = 0;
         if(map.length * map[0].length > 5000)
@@ -244,7 +265,7 @@ public class MapState {
         return map;
     }
 
-    public static MapCell[][] generateRivers(MapCell[][] map){
+    public MapCell[][] generateRivers(MapCell[][] map){
         Random rand = new Random();
         int numOfRivers = 0;
         if(map.length * map[0].length > 10000)
@@ -306,14 +327,13 @@ public class MapState {
         return map;
     }
 
-    public static MapCell[][] generateHousesAndRoads(MapCell[][] map){
+    public MapCell[][] generateHousesAndRoads(MapCell[][] map){
         map = generateVillages(map);
         map = generateRemoteHouses(map);
-
         return map;
     }
 
-    public static MapCell[][] generateVillages(MapCell[][] map){
+    public MapCell[][] generateVillages(MapCell[][] map){
         Random rand = new Random();
         int numOfVillages = 0;
         if(map.length * map[0].length > 5000)
@@ -345,12 +365,10 @@ public class MapState {
         map = generateSurroundingStreets(map, villagePositions, housesPerVillage);
         map = generateSurroundingHouses(map, villagePositions, housesPerVillage);
 
-
-
         return map;
     }
 
-    public static MapCell[][] generateRemoteHouses(MapCell[][] map){
+    public MapCell[][] generateRemoteHouses(MapCell[][] map){
         Random rand = new Random();
         int numberOfRemoteHouses = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 10000)) + 1;
 
@@ -460,7 +478,7 @@ public class MapState {
         return map;
     }
 
-    public static MapCell[][] generateCentralSquares(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
+    public MapCell[][] generateCentralSquares(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
         int numOfVillages = villagePositions.length;
 
         for(int i = 0; i < numOfVillages; i++){
@@ -761,8 +779,8 @@ public class MapState {
 
         return map;
     }
-
-    public static MapCell[][] generateSurroundingStreets(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
+   
+    public MapCell[][] generateSurroundingStreets(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
         int numOfVillages = villagePositions.length;
         Random rand = new Random();
 
@@ -909,7 +927,7 @@ public class MapState {
         return map;
     }
 
-    public static MapCell[][] generateSurroundingHouses(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
+    public MapCell[][] generateSurroundingHouses(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
         int numOfVillages = villagePositions.length;
         Random rand = new Random();
         int numberOfHouses;
@@ -943,14 +961,10 @@ public class MapState {
 
 
         }
-
-
-
-
         return map;
     }
 
-    public static MapCell[][] generateMainRoads(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
+    public MapCell[][] generateMainRoads(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
         int numOfVillages = villagePositions.length;
         Random rand = new Random();
 
@@ -999,7 +1013,7 @@ public class MapState {
         return map;
     }
 
-    public static MapCell[][] generateAsphaltRoad(MapCell[][] map, int[] mainRoadConnection){
+    public MapCell[][] generateAsphaltRoad(MapCell[][] map, int[] mainRoadConnection){
         Random rand = new Random();
         boolean roadGeneralDirection = rand.nextBoolean();
         boolean currDirectionVertical = false;
@@ -1098,7 +1112,7 @@ public class MapState {
         return map;
     }
 
-    public static MapCell[][] generateDirtRoad(MapCell[][] map, int houseX, int houseY){
+    public MapCell[][] generateDirtRoad(MapCell[][] map, int houseX, int houseY){
         int x=houseX, y=houseY;
 
         if(houseX < map.length/2){//left side
@@ -1175,7 +1189,7 @@ public class MapState {
         return map;
     }
 
-    public static int[] getDirtRoadConnection(MapCell[][] map){
+    public int[] getDirtRoadConnection(MapCell[][] map){
         Random rand = new Random();
         int[] roadConnection = new int[2];
 
@@ -1191,7 +1205,7 @@ public class MapState {
         return roadConnection;
     }
 
-    public static boolean nextToRoad(MapCell[][] map, int x, int y){
+    public boolean nextToRoad(MapCell[][] map, int x, int y){
         if(map[x-1][y].getSoilType() == 1  || map[x+1][y].getSoilType() == 1 || map[x][y-1].getSoilType() == 1 || map[x][y+1].getSoilType() == 1){
             return true;
         }
@@ -1199,7 +1213,7 @@ public class MapState {
         return false;
     }
 
-    public static int calculateDist(int x1, int y1, int x2, int y2){
+    public int calculateDist(int x1, int y1, int x2, int y2){
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
 }

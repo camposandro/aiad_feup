@@ -1,12 +1,9 @@
 package launchers;
 
-//import agents.Fire;
 import agents.FireStation;
 import agents.Firefighter;
-import agents.MyAgent;
 import jade.core.ProfileImpl;
 import jade.wrapper.StaleProxyException;
-import sajas.core.AID;
 import sajas.core.Runtime;
 import sajas.sim.repast3.Repast3Launcher;
 import sajas.wrapper.ContainerController;
@@ -14,14 +11,12 @@ import uchicago.src.sim.engine.SimInit;
 import uchicago.src.sim.gui.DisplaySurface;
 import uchicago.src.sim.gui.Object2DDisplay;
 import uchicago.src.sim.space.Object2DGrid;
-import agents.MapCell;
 import utils.MapState;
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class SimulationLauncher extends Repast3Launcher {
 
@@ -34,15 +29,13 @@ public class SimulationLauncher extends Repast3Launcher {
     private int envWidth = 200;         // Recommended size          = 200x100
     private int envHeight = 100;        // Recommended maximum size = 800X400
                                         // Absolute Repast Maximum = 1200x600
-    private MapCell[][] state;
+    private MapState mapState;
 
     private int numFirefighters = 1;
     private int numFires = 1;
 
     private FireStation fireStation;
     private List<Firefighter> firefighters;
-
-    private Map<AID, MyAgent> myAgents;
 
     public SimulationLauncher() {
         setRand(new Random());
@@ -64,11 +57,6 @@ public class SimulationLauncher extends Repast3Launcher {
         String displaySurfaceName = "Fire Control Environment";
         setDisplaySurface(new DisplaySurface(this, displaySurfaceName));
         registerDisplaySurface(displaySurfaceName, displaySurface);
-
-        //state = MapState.createMapState(this,envWidth,envHeight,99,99);
-
-        state = MapState.createMapState(this,envWidth,envHeight,ThreadLocalRandom.current().nextInt(0, envWidth),ThreadLocalRandom.current().nextInt(0, envHeight));
-        //genFire();
     }
 
     public void begin() {
@@ -80,25 +68,18 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private void buildModel() {
         setEnvironment(new Object2DGrid(envWidth, envHeight));
+        setMapState(new MapState(this,envWidth,envHeight));
     }
 
     private void buildSchedule() {
-
         getSchedule().scheduleActionAtInterval(100, this, "simulationStep");
-        getSchedule().scheduleActionAtInterval(100, this, "test");
     }
 
     private void buildDisplay() {
         Object2DDisplay firefightersDisplay = new Object2DDisplay(environment);
         firefightersDisplay.setObjectList(firefighters);
         displaySurface.addDisplayable(firefightersDisplay, "Show Firefighters");
-
-        /*Object2DDisplay firesDisplay = new Object2DDisplay(environment);
-        firesDisplay.setObjectList(fires);
-        displaySurface.addDisplayable(firesDisplay, "Show Fires");*/
-
         displaySurface.setBackground(Color.WHITE);
-        displaySurface.setSize(400,400);
         displaySurface.display();
     }
 
@@ -108,19 +89,16 @@ public class SimulationLauncher extends Repast3Launcher {
         try {
             initializeMapCells();
             launchFirefighters();
-            //launchFires();
             launchFireStation();
         } catch(StaleProxyException e) {
             e.printStackTrace();
         }
     }
 
-    private void initializeMapCells() throws StaleProxyException {
+    private void initializeMapCells() {
         for (int i = 0; i < envWidth; i++) {
             for (int j = 0; j < envHeight; j++) {
-                environment.putObjectAt(i,j,state[i][j]);
-                //mainContainer.acceptNewAgent("cell-" + i + "-" + j, state[i][j]).start();
-
+                environment.putObjectAt(i,j,mapState.getGrid()[i][j]);
             }
         }
     }
@@ -128,18 +106,15 @@ public class SimulationLauncher extends Repast3Launcher {
     private void updateMap() {
         for (int i = 0; i < envWidth; i++) {
             for (int j = 0; j < envHeight; j++) {
-                environment.putObjectAt(i,j,state[i][j]);
+                environment.putObjectAt(i,j,mapState.getGrid()[i][j]);
             }
         }
     }
 
     private void updateAgents() {
-        for (Firefighter f: firefighters)
-            environment.putObjectAt(f.getX(),f.getY(),f);
-/*
-        environment.putObjectAt(fireStation.getX(),fireStation.getY(),fireStation);
-        for (Fire fire: fires)
-            environment.putObjectAt(fire.getX(),fire.getY(),fire);*/
+        for (Firefighter f: firefighters) {
+            environment.putObjectAt(f.getX(), f.getY(), f);
+        }
     }
 
     private void launchFireStation() throws StaleProxyException {
@@ -152,43 +127,17 @@ public class SimulationLauncher extends Repast3Launcher {
         List<Firefighter> firefighters = new ArrayList<>();
         for (int i = 0; i < numFirefighters; i++) {
             Firefighter ff = new Firefighter(this);
-            System.out.println("Firefighter: (" + ff.getX() + "," + ff.getY() + ")");
             environment.putObjectAt(ff.getX(), ff.getY(), ff);
             mainContainer.acceptNewAgent("firefighter-" + i, ff).start();
             firefighters.add(ff);
         }
         setFirefighters(firefighters);
     }
-/*
-    private void launchFires() throws StaleProxyException {
-        List<Fire> fires = new ArrayList<>();
-        for (int i = 0; i < numFires; i++) {
-            Fire f = new Fire(this, rand.nextInt(envWidth), rand.nextInt(envHeight));
-            System.out.println("Fire: (" + f.getX() + "," + f.getY() + ")");
-            environment.putObjectAt(f.getX(), f.getY(), f);
-            mainContainer.acceptNewAgent("fire-" + i, f).start();
-            fires.add(f);
-        };
-        setFires(fires);
-    }
-*/
+
     public void simulationStep() {
-
-        displaySurface.updateDisplay();
-    }
-    public void test() {
         updateMap();
-        updateAgents();/*
-        for(Firefighter f: firefighters) {
-           // environment.putObjectAt(f.getX(),0,new MapCell(f.getX(),0,50,50));
-            if(f.getX() < 7) {
-                f.setX(f.getX() + 1);
-                System.out.println("x: " + f.getX() + " y: " + f.getY());
-
-            }
-            environment.putObjectAt(f.getX(), f.getY(), f);
-        }*/
-
+        updateAgents();
+        displaySurface.updateDisplay();
     }
 
     @Override
@@ -266,31 +215,12 @@ public class SimulationLauncher extends Repast3Launcher {
     public void setFirefighters(List<Firefighter> firefighters) {
         this.firefighters = firefighters;
     }
-/*
-    public List<Fire> getFires() {
-        return fires;
+
+    public MapState getMapState() {
+        return mapState;
     }
 
-    public void setFires(List<Fire> fires) {
-        this.fires = fires;
-    }
-*/
-    public  MapCell[][] getState() {
-        return state;
-    }
-    public  MapCell getStatePos(int x, int y) {
-        if(x < 0 || y < 0 || x >= envWidth || y >= envHeight)
-            return null;
-        return state[x][y];
-    }
-
-    public void setState( MapCell[][] state) {
-        this.state = state;
-    }
-
-    public void genFire() {
-        int x = ThreadLocalRandom.current().nextInt(0, envWidth);
-        int y = ThreadLocalRandom.current().nextInt(0, envHeight);
-        state[x][y].setOnFire(true);
+    public void setMapState(MapState state) {
+        this.mapState = state;
     }
 }
