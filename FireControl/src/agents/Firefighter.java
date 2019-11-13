@@ -14,12 +14,15 @@ public class Firefighter extends MyAgent {
 
     int viewingDistance =3;
     MapCell[][] perception = new MapCell[viewingDistance*2][viewingDistance*2];
-    MapCell[] fires = new MapCell[viewingDistance*4];
+    public static HashSet<MapCell> fires = new HashSet<>();
     int extinguishDistance = 1;
     private int x;
     private int y;
+    private int fireTicks = 2;
+    private int ticksPeriod = 0;
 
-    enum State {Driving, Searching, Extinguishing, Refilling};
+    enum State {Driving, Searching, Extinguishing, Refilling}
+
     State currentState;
     int[] destination = new int[2];
     int[] pos;
@@ -34,7 +37,7 @@ public class Firefighter extends MyAgent {
     public Firefighter(SimulationLauncher launcher) {
         super(launcher);
         this.launcher = launcher;
-        this.addBehaviour(new FirefighterBehaviour(this,1000));
+        this.addBehaviour(new FirefighterBehaviour(this,500));
         destination[0] = -1;
         currentState = State.Driving;
     }
@@ -63,19 +66,16 @@ public class Firefighter extends MyAgent {
 
 
     protected void updatePerception() {
-        //fires.();
-
-
+        fires.clear();
         for(int i = 0; i < viewingDistance*2; i++)
             for(int j = 0; j < viewingDistance * 2; j++) {
                 MapCell cell = launcher.getStatePos(x - 3 + i, y - 3 + j);
                 perception[i][j] = cell;
                 if(cell!= null && cell.isOnFire()) {
-                    System.out.println("Fire in: x= " + (x - 3 +i) + " y= " + (y - 3 + j) );
+                    fires.add(cell);
                     this.currentState = State.Extinguishing;
                 }
             }
-                
     }
 
     protected void move() {
@@ -102,6 +102,11 @@ public class Firefighter extends MyAgent {
     }
 
     private void extinguishFire() {
+        water -= 10;
+        Iterator<MapCell> i = fires.iterator();
+
+        while (i.hasNext())
+            i.next().beExtinguished();
 
     }
 
@@ -112,19 +117,17 @@ public class Firefighter extends MyAgent {
             agent = a;
         }
         protected void onTick() {
-            int size = MapState.fireCell.size();
-            //for(int i = 0; i < size; i++)
-            //    MapState.fireCell.get(i).update();
-            HashSet<MapCell> a = (HashSet)MapState.fireCell.clone();
+            if(ticksPeriod >= fireTicks) {
+                HashSet<MapCell> a = (HashSet) MapState.fireCell.clone();
+                Iterator<MapCell> i = a.iterator();
 
-            Iterator<MapCell> i = a.iterator();
-
-            while (i.hasNext())
-                i.next().update();
-
-
-        updatePerception();
-            System.out.println("Dest x: " + destination[0] + " y: " + destination[1] + " position x: " + x + " y: " + y );
+                while (i.hasNext())
+                    i.next().update();
+                ticksPeriod = 0;
+            }
+            else
+                ticksPeriod++;
+            updatePerception();
 
             switch(currentState) {
                 case Driving: {
@@ -154,11 +157,11 @@ public class Firefighter extends MyAgent {
                     break;
                 }
                 case Extinguishing: {
-                    /*
-                    if(!visibleFire(perception)){
+
+                    if(fires.isEmpty()){
                         currentState = State.Driving;
                         setDestination(-1,-1);
-                    }
+                    }/*
                     else if(dangerousFire(perception)){
                         moveBack(); //esta fnção também vai ser fdd
                     }
@@ -175,9 +178,9 @@ public class Firefighter extends MyAgent {
                         messageToCentralNewFire(fire.position, fire.size);
                         move(fire.position);            //No idea how we are going to do this  YET!!!
                         return;
-                    }
+                    }*/
 
-                     */
+
                     break;
                 }
                 case Refilling: {

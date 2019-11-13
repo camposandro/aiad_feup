@@ -122,7 +122,7 @@ public class SimulationLauncher extends Repast3Launcher {
                 //mainContainer.acceptNewAgent("cell-" + i + "-" + j, state[i][j]).start();
 
             }
-        };
+        }
     }
 
     private void updateMap() {
@@ -130,7 +130,7 @@ public class SimulationLauncher extends Repast3Launcher {
             for (int j = 0; j < envHeight; j++) {
                 environment.putObjectAt(i,j,state[i][j]);
             }
-        };
+        }
     }
 
     private void updateAgents() {
@@ -156,7 +156,7 @@ public class SimulationLauncher extends Repast3Launcher {
             environment.putObjectAt(ff.getX(), ff.getY(), ff);
             mainContainer.acceptNewAgent("firefighter-" + i, ff).start();
             firefighters.add(ff);
-        };
+        }
         setFirefighters(firefighters);
     }
 /*

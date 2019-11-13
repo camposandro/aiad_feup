@@ -18,11 +18,7 @@ public class MapCell extends MyAgent {
     private int vegetationDensity;
     private int humidityPercentage;
     private int burnedPercentage;
-
-    public boolean isOnFire() {
-        return onFire;
-    }
-
+    private int probOfFire;
     private boolean onFire = false;
     private int soilType; //0 - vegetation, 1 - asphalt, 2 - dirt, 3 - water, 4 - house
     private Color color;
@@ -41,7 +37,15 @@ public class MapCell extends MyAgent {
         setSoilType(soilType);
         setBurnedPercentage(0);
         setColor(this.calcColor());
+        setProbOfFire( humidityPercentage + (100 - vegetationDensity));
 
+    }
+
+
+
+    protected void setProbOfFire( int densitySum){
+
+        this.probOfFire = densitySum / 6;
     }
 
     private Color calcColor() {
@@ -77,6 +81,10 @@ public class MapCell extends MyAgent {
         return a;
     }
 
+    public boolean isOnFire() {
+        return onFire;
+    }
+
     private MapCell[] getNeighbours() {
         MapCell[] neighbours = new MapCell[4];
 
@@ -92,7 +100,7 @@ public class MapCell extends MyAgent {
         if (burnedPercentage == 100) {
             return;
         }
-        if (random <= vegetationDensity * (100 - humidityPercentage)) {
+        if (soilType != 3 && random <= probOfFire) {
             this.onFire = true;
             setColor(this.calcColor());
             MapState.fireCell.add(this);
