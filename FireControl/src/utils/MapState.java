@@ -1,31 +1,49 @@
 package utils;
 
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 import agents.MapCell;
 import launchers.SimulationLauncher;
 
 public class MapState {
-    private MapCell[][] grid;
+    private static MapCell[][] grid;
 
-    private int envWidth;
-    private int envHeight;
+    private static int envWidth;
+    private static int envHeight;
 
-    private HashSet<MapCell> fireCell = new HashSet<>();
+    private static HashSet<MapCell> fireCell = new HashSet<>();
+
+    final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
     public MapState(SimulationLauncher launcher, int envWidth, int envHeight) {
         this.envWidth = envWidth;
         this.envHeight = envHeight;
         this.grid = createMapState(launcher,envWidth,envHeight);
+        // Schedule world update
+        service.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                HashSet<MapCell> fireCells = MapState.getFirecells();
+                HashSet<MapCell> a = (HashSet) fireCells.clone();
+                Iterator<MapCell> i = a.iterator();
+                while (i.hasNext())
+                    i.next().update();
+            }
+        }, 0, SimulationLauncher.UPDATE_RATE, TimeUnit.MILLISECONDS);
     }
 
     public MapCell[][] getGrid() {
         return grid;
     }
 
-    public MapCell getGridPos(int x, int y) {
+    public static MapCell getGridPos(int x, int y) {
         if(x < 0 || y < 0 || x >= envWidth || y >= envHeight)
             return null;
         return grid[x][y];
@@ -35,8 +53,12 @@ public class MapState {
         this.grid = grid;
     }
 
-    public HashSet<MapCell> getFirecells() {
+    public static HashSet<MapCell> getFirecells() {
         return fireCell;
+    }
+
+    public void updateState() {
+
     }
 
     public MapCell[][] createMapState(SimulationLauncher launcher, int width, int length) {

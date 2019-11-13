@@ -2,6 +2,7 @@ package agents;
 
 import launchers.SimulationLauncher;
 import uchicago.src.sim.gui.SimGraphics;
+import utils.MapState;
 
 import java.awt.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -31,7 +32,6 @@ public class MapCell extends MyAgent {
         setBurnedPercentage(0);
         setColor(this.calcColor());
         setProbOfFire( humidityPercentage + (100 - vegetationDensity));
-
     }
 
     protected void setProbOfFire( int densitySum){
@@ -70,10 +70,10 @@ public class MapCell extends MyAgent {
     private MapCell[] getNeighbours() {
         MapCell[] neighbours = new MapCell[4];
 
-        neighbours[0] = getEnvironment().getMapState().getGridPos(x,y+1);
-        neighbours[1] = getEnvironment().getMapState().getGridPos(x,y-1);
-        neighbours[2] = getEnvironment().getMapState().getGridPos(x-1,y);
-        neighbours[3] = getEnvironment().getMapState().getGridPos(x+1,y);
+        neighbours[0] = MapState.getGridPos(x,y+1);
+        neighbours[1] = MapState.getGridPos(x,y-1);
+        neighbours[2] = MapState.getGridPos(x-1,y);
+        neighbours[3] = MapState.getGridPos(x+1,y);
 
         return neighbours;
     }
@@ -85,7 +85,7 @@ public class MapCell extends MyAgent {
         if (soilType != 3 && random <= probOfFire) {
             this.onFire = true;
             setColor(this.calcColor());
-            getEnvironment().getMapState().getFirecells().add(this);
+            MapState.getFirecells().add(this);
         }
     }
 
@@ -179,7 +179,7 @@ public class MapCell extends MyAgent {
         simGraphics.drawRect(getColor());
     }
 
-    protected void update() {
+    public void update() {
         if (onFire) {
             if (burnedPercentage == 100) {
                 onFire = false;

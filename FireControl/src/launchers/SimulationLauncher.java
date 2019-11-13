@@ -20,6 +20,9 @@ import java.util.List;
 
 public class SimulationLauncher extends Repast3Launcher {
 
+    // World update fixed rate
+    public static int UPDATE_RATE = 1000;
+
     private Random rand;
 
     private ContainerController mainContainer;

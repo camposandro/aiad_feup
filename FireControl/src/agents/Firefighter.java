@@ -17,7 +17,7 @@ public class Firefighter extends MyAgent {
     int extinguishDistance = 1;
     private int x;
     private int y;
-    private int fireTicks = 2;
+    private int fireTicks = 1;
     private int ticksPeriod = 0;
 
     enum State {Driving, Searching, Extinguishing, Refilling}
@@ -34,7 +34,7 @@ public class Firefighter extends MyAgent {
 
     public Firefighter(SimulationLauncher launcher) {
         super(launcher);
-        this.addBehaviour(new FirefighterBehaviour(this, 1000));
+        this.addBehaviour(new FirefighterBehaviour(this, SimulationLauncher.UPDATE_RATE));
         destination[0] = -1;
         currentState = State.Driving;
     }
@@ -115,19 +115,6 @@ public class Firefighter extends MyAgent {
         }
 
         protected void onTick() {
-            HashSet<MapCell> fireCells = getEnvironment().getMapState().getFirecells();
-
-            if(ticksPeriod >= fireTicks) {
-                HashSet<MapCell> a = (HashSet) fireCells.clone();
-                Iterator<MapCell> i = a.iterator();
-
-                while (i.hasNext())
-                    i.next().update();
-                ticksPeriod = 0;
-            }
-            else
-                ticksPeriod++;
-                
             updatePerception();
 
             switch(currentState) {
