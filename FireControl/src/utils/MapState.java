@@ -146,7 +146,7 @@ public class MapState {
         mapCell = generateWaterBodies(mapCell);
 
         //Generate Houses
-        mapCell = generateHouses(mapCell);
+        mapCell = generateHousesAndRoads(mapCell);
 
         //Generate Roads
             //Generate Asphalt Roads
@@ -306,7 +306,7 @@ public class MapState {
         return map;
     }
 
-    public static MapCell[][] generateHouses(MapCell[][] map){
+    public static MapCell[][] generateHousesAndRoads(MapCell[][] map){
         map = generateVillages(map);
         map = generateRemoteHouses(map);
 
@@ -351,7 +351,111 @@ public class MapState {
     }
 
     public static MapCell[][] generateRemoteHouses(MapCell[][] map){
-        //TO DO
+        Random rand = new Random();
+        int numberOfRemoteHouses = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 10000)) + 1;
+
+        int[] roadConnection = new int[2];
+        int dirtRoadLength = rand.nextInt(15) + 5;
+        int dirtRoadDirection = rand.nextInt(4); // 0:Down / 1:Left / 2:Up / 3:Right
+        boolean validRoadDirection = false;
+        int houseX, houseY;
+
+        for(int i = 0; i < numberOfRemoteHouses; i++) {
+            roadConnection = getDirtRoadConnection(map);
+
+            dirtRoadLength = rand.nextInt(15) + 5;
+            validRoadDirection = false;
+
+            if (roadConnection[0] == 0 && roadConnection[1] == 0) { //There are no asphalt roads
+                houseX = rand.nextInt(map.length);
+                houseY = rand.nextInt(map[0].length);
+
+                while(map[houseX][houseY].getSoilType() != 0){
+                    houseX = rand.nextInt(map.length);
+                    houseY = rand.nextInt(map[0].length);
+                }
+
+
+                map[houseX][houseY].setVegetationDensity(0);
+                map[houseX][houseY].setHumidityPercentage(100);
+                map[houseX][houseY].setSoilType(4);
+
+                map = generateDirtRoad(map, houseX, houseY);
+            }
+            else {
+                while(!validRoadDirection){
+                    dirtRoadDirection = rand.nextInt(4);
+
+                    if(dirtRoadDirection == 0 && !nextToRoad(map, roadConnection[0], roadConnection[1] - 2)){
+                        validRoadDirection = true;
+                    }
+                    else if(dirtRoadDirection == 1 && !nextToRoad(map, roadConnection[0] - 2, roadConnection[1])){
+                        validRoadDirection = true;
+                    }
+                    else if(dirtRoadDirection == 2 && !nextToRoad(map, roadConnection[0], roadConnection[1] + 2)){
+                        validRoadDirection = true;
+                    }
+                    else if(dirtRoadDirection == 3 && !nextToRoad(map, roadConnection[0] + 2, roadConnection[1])){
+                        validRoadDirection = true;
+                    }
+                }
+
+                for (int j = 1; j <= dirtRoadLength; j++) {
+                    if (dirtRoadDirection == 0 && map[roadConnection[0]][roadConnection[1] - j].getSoilType() == 0) {
+                        if(j == dirtRoadLength){
+                            map[roadConnection[0]][roadConnection[1] - j].setVegetationDensity(0);
+                            map[roadConnection[0]][roadConnection[1] - j].setHumidityPercentage(100);
+                            map[roadConnection[0]][roadConnection[1] - j].setSoilType(4);
+                        }
+                        else{
+                            map[roadConnection[0]][roadConnection[1] - j].setVegetationDensity(0);
+                            map[roadConnection[0]][roadConnection[1] - j].setHumidityPercentage(100);
+                            map[roadConnection[0]][roadConnection[1] - j].setSoilType(2);
+                        }
+                    }
+                    else if (dirtRoadDirection == 1 && map[roadConnection[0] - j][roadConnection[1]].getSoilType() == 0) {
+                        if(j == dirtRoadLength){
+                            map[roadConnection[0] - j][roadConnection[1]].setVegetationDensity(0);
+                            map[roadConnection[0] - j][roadConnection[1]].setHumidityPercentage(100);
+                            map[roadConnection[0] - j][roadConnection[1]].setSoilType(4);
+                        }
+                        else{
+                            map[roadConnection[0] - j][roadConnection[1]].setVegetationDensity(0);
+                            map[roadConnection[0] - j][roadConnection[1]].setHumidityPercentage(100);
+                            map[roadConnection[0] - j][roadConnection[1]].setSoilType(2);
+                        }
+
+                    }
+                    else if (dirtRoadDirection == 2 && map[roadConnection[0]][roadConnection[1] + j].getSoilType() == 0) {
+                        if(j == dirtRoadLength){
+                            map[roadConnection[0]][roadConnection[1] + j].setVegetationDensity(0);
+                            map[roadConnection[0]][roadConnection[1] + j].setHumidityPercentage(100);
+                            map[roadConnection[0]][roadConnection[1] + j].setSoilType(4);
+                        }
+                        else{
+                            map[roadConnection[0]][roadConnection[1] + j].setVegetationDensity(0);
+                            map[roadConnection[0]][roadConnection[1] + j].setHumidityPercentage(100);
+                            map[roadConnection[0]][roadConnection[1] + j].setSoilType(2);
+                        }
+                    }
+                    else if (dirtRoadDirection == 3 && map[roadConnection[0] + j][roadConnection[1]].getSoilType() == 0) {
+                        if(j == dirtRoadLength){
+                            map[roadConnection[0] + j][roadConnection[1]].setVegetationDensity(0);
+                            map[roadConnection[0] + j][roadConnection[1]].setHumidityPercentage(100);
+                            map[roadConnection[0] + j][roadConnection[1]].setSoilType(4);
+                        }
+                        else{
+                            map[roadConnection[0] + j][roadConnection[1]].setVegetationDensity(0);
+                            map[roadConnection[0] + j][roadConnection[1]].setHumidityPercentage(100);
+                            map[roadConnection[0] + j][roadConnection[1]].setSoilType(2);
+                        }
+                    }
+
+                }
+            }
+        }
+
+
 
         return map;
     }
@@ -658,7 +762,6 @@ public class MapState {
         return map;
     }
 
-
     public static MapCell[][] generateSurroundingStreets(MapCell[][] map, int[][] villagePositions, int[] housesPerVillage){
         int numOfVillages = villagePositions.length;
         Random rand = new Random();
@@ -824,9 +927,9 @@ public class MapState {
             numberOfHouses = 0;
 
             while(numberOfHouses < housesPerVillage[i]) {
-                for (int n = villageUpperLeft[0] - 1; n < villageDownerRight[0]; n++) {
-                    for (int m = villageUpperLeft[1] - 1; m < villageDownerRight[1]; m++) {
-                        if (housesPerVillage[i] >= numberOfHouses && map[n][m].getSoilType() == 0 && nextToRoad(map, n, m) && rand.nextBoolean()) {
+                for (int n = villageUpperLeft[0] + 1; n < villageDownerRight[0] - 1; n++) {
+                    for (int m = villageUpperLeft[1] + 1; m < villageDownerRight[1] - 1; m++) {
+                        if (housesPerVillage[i] >= numberOfHouses && map[n][m].getSoilType() == 0 && nextToRoad(map, n, m) && rand.nextInt(10) == 0) {
                             map[n][m].setVegetationDensity(0);
                             map[n][m].setHumidityPercentage(100);
                             map[n][m].setSoilType(4);
@@ -993,6 +1096,99 @@ public class MapState {
         }
 
         return map;
+    }
+
+    public static MapCell[][] generateDirtRoad(MapCell[][] map, int houseX, int houseY){
+        int x=houseX, y=houseY;
+
+        if(houseX < map.length/2){//left side
+            if(houseY < houseX){//up
+                y--;
+                while(y >= 0){
+                    if(map[houseX][y].getSoilType() == 0  && (map[0].length - houseY) > houseY ){
+                        map[houseX][y].setVegetationDensity(0);
+                        map[houseX][y].setHumidityPercentage(100);
+                        map[houseX][y].setSoilType(2);
+                    }
+                    y--;
+                }
+            }
+            else if((map[0].length - houseY) < houseX){//down
+                y++;
+                while(y < map[0].length){
+                    if(map[houseX][y].getSoilType() == 0) {
+                        map[houseX][y].setVegetationDensity(0);
+                        map[houseX][y].setHumidityPercentage(100);
+                        map[houseX][y].setSoilType(2);
+                    }
+                    y++;
+                }
+            }
+            else{//left
+                x--;
+                while(x >= 0){
+                    if(map[x][houseY].getSoilType() == 0){
+                        map[x][houseY].setVegetationDensity(0);
+                        map[x][houseY].setHumidityPercentage(100);
+                        map[x][houseY].setSoilType(2);
+                    }
+                    x--;
+                }
+            }
+        }
+        else{//right side
+            if(houseY < (map.length - houseX) && (map[0].length - houseY) > houseY ){//up
+                y--;
+                while(y >= 0){
+                    if(map[houseX][y].getSoilType() == 0){
+                        map[houseX][y].setVegetationDensity(0);
+                        map[houseX][y].setHumidityPercentage(100);
+                        map[houseX][y].setSoilType(2);
+                    }
+                    y--;
+                }
+            }
+            else if((map[0].length - houseY) < (map.length - houseX)){//down
+                y++;
+                while(y < map[0].length){
+                    if(map[houseX][y].getSoilType() == 0){
+                        map[houseX][y].setVegetationDensity(0);
+                        map[houseX][y].setHumidityPercentage(100);
+                        map[houseX][y].setSoilType(2);
+                    }
+                    y++;
+                }
+            }
+            else{//right
+                x++;
+                while(x < map.length){
+                    if(map[x][houseY].getSoilType() == 0){
+                        map[x][houseY].setVegetationDensity(0);
+                        map[x][houseY].setHumidityPercentage(100);
+                        map[x][houseY].setSoilType(2);
+                    }
+                    x++;
+                }
+            }
+        }
+
+        return map;
+    }
+
+    public static int[] getDirtRoadConnection(MapCell[][] map){
+        Random rand = new Random();
+        int[] roadConnection = new int[2];
+
+        for(int i = 20; i < map.length - 20; i++){
+            for(int j = 20; j < map[0].length - 20; j++){
+                if(map[i][j].getSoilType() == 1 && rand.nextInt(map.length * map[0].length / 500) == 0){
+                    roadConnection[0] = i;
+                    roadConnection[1] = j;
+                }
+            }
+        }
+
+        return roadConnection;
     }
 
     public static boolean nextToRoad(MapCell[][] map, int x, int y){
