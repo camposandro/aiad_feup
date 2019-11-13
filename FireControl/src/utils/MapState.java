@@ -312,6 +312,7 @@ public class MapState {
 
         return map;
     }
+
     public static MapCell[][] generateVillages(MapCell[][] map){
         Random rand = new Random();
         int numOfVillages = 0;
@@ -840,10 +841,13 @@ public class MapState {
                 mainRoadMinimumDistanceToCentralSquareY = 2;
             }
 
+            mainRoadConnection[0] = 0;
+            mainRoadConnection[1] = 0;
+
             while(mainRoadConnection[0] == 0 && mainRoadConnection[1] == 0){
                 for(int n = villageUpperLeft[0] - 1; n < villageDownerRight[0]; n++){
                     for(int m = villageUpperLeft[1] - 1; m < villageDownerRight[1]; m++){
-                        if(((n <= villagePositions[i][0] - mainRoadMinimumDistanceToCentralSquareX && m >= villagePositions[i][1] + mainRoadMinimumDistanceToCentralSquareY) || (n >= villagePositions[i][0] + mainRoadMinimumDistanceToCentralSquareX && m >= villagePositions[i][1] + mainRoadMinimumDistanceToCentralSquareY) || (m <= villagePositions[i][1] - mainRoadMinimumDistanceToCentralSquareY && n <= villagePositions[i][0] - mainRoadMinimumDistanceToCentralSquareX) || (m <= villagePositions[i][1] - mainRoadMinimumDistanceToCentralSquareY && n >= villagePositions[i][0] + mainRoadMinimumDistanceToCentralSquareX)) && rand.nextInt(housesPerVillage[i]) == 0){
+                        if(map[n][m].getSoilType() == 1 && ((n <= villagePositions[i][0] - mainRoadMinimumDistanceToCentralSquareX && m >= villagePositions[i][1] + mainRoadMinimumDistanceToCentralSquareY) || (n >= villagePositions[i][0] + mainRoadMinimumDistanceToCentralSquareX && m >= villagePositions[i][1] + mainRoadMinimumDistanceToCentralSquareY) || (m <= villagePositions[i][1] - mainRoadMinimumDistanceToCentralSquareY && n <= villagePositions[i][0] - mainRoadMinimumDistanceToCentralSquareX) || (m <= villagePositions[i][1] - mainRoadMinimumDistanceToCentralSquareY && n >= villagePositions[i][0] + mainRoadMinimumDistanceToCentralSquareX)) && rand.nextInt(housesPerVillage[i]) == 0){
                             mainRoadConnection[0] = n;
                             mainRoadConnection[1] = m;
                         }
@@ -851,18 +855,62 @@ public class MapState {
                 }
             }
 
-            System.out.println("Main Road Connection = " + mainRoadConnection[0] + " : " + mainRoadConnection[1]);
-
             map = generateAsphaltRoad(map, mainRoadConnection);
-
-
         }
 
         return map;
     }
 
     public static MapCell[][] generateAsphaltRoad(MapCell[][] map, int[] mainRoadConnection){
+        Random rand = new Random();
+        boolean currDirectionVertical = false;
+        int nextStraightLength = 0;
+        int x = mainRoadConnection[0], y = mainRoadConnection[1];
 
+        //North/West
+        while(x > 0 && y > 0){
+            if(nextStraightLength == 0){
+                currDirectionVertical = rand.nextBoolean();
+                nextStraightLength = rand.nextInt((int)Math.sqrt((map.length + map[0].length)/2) - 5) + 5;
+            }
+
+            if(currDirectionVertical){
+                y--;
+            }
+            else{
+                x--;
+            }
+
+            map[x][y].setVegetationDensity(0);
+            map[x][y].setHumidityPercentage(100);
+            map[x][y].setSoilType(1);
+
+            nextStraightLength--;
+        }
+
+        x = mainRoadConnection[0];
+        y = mainRoadConnection[1];
+
+        //South/East
+        while(x < map.length - 1 && y < map[0].length - 1){
+            if(nextStraightLength == 0){
+                currDirectionVertical = rand.nextBoolean();
+                nextStraightLength = rand.nextInt((int)Math.sqrt((map.length + map[0].length)/2) - 5) + 5;
+            }
+
+            if(currDirectionVertical){
+                y++;
+            }
+            else{
+                x++;
+            }
+
+            map[x][y].setVegetationDensity(0);
+            map[x][y].setHumidityPercentage(100);
+            map[x][y].setSoilType(1);
+
+            nextStraightLength--;
+        }
 
         return map;
     }
