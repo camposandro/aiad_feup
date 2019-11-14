@@ -11,9 +11,9 @@ public abstract class MyAgent extends Agent implements Drawable {
 
     protected AgentState state;
 
-    public MyAgent(SimulationLauncher environment) {
+    public MyAgent(SimulationLauncher environment, int x, int y) {
         this.environment = environment;
-        this.state = new AgentState();
+        this.state = new AgentState(x, y);
     }
 
     @Override

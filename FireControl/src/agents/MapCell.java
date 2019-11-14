@@ -1,13 +1,14 @@
 package agents;
 
-import launchers.SimulationLauncher;
+import uchicago.src.sim.gui.Drawable;
 import uchicago.src.sim.gui.SimGraphics;
 import utils.MapState;
 
 import java.awt.*;
+import java.io.Serializable;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class MapCell extends MyAgent {
+public class MapCell implements Drawable, Serializable  {
 
     private int x;
     private int y;
@@ -17,17 +18,19 @@ public class MapCell extends MyAgent {
     private int burnedPercentage;
     private int probOfFire;
     private boolean onFire = false;
+    private int burningRate = 0;
     private int soilType; //0 - vegetation, 1 - asphalt, 2 - dirt, 3 - water, 4 - house
     private Color color;
 
-    public MapCell(SimulationLauncher launcher, int x, int y) {
-        super(launcher);
+    public MapCell() {
+    }
+
+    public MapCell(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
-    public MapCell(SimulationLauncher launcher, int x, int y, int vegetationDensity, int humidityPercentage, int soilType) {
-        super(launcher);
+    public MapCell(int x, int y, int vegetationDensity, int humidityPercentage, int soilType) {
         setX(x);
         setY(y);
         setIsPrioritary(false);
@@ -127,6 +130,7 @@ public class MapCell extends MyAgent {
 
     public void setOnFire(boolean onFire) {
         this.onFire = onFire;
+            this.burningRate = 100;
         setColor(this.calcColor());
     }
 
@@ -153,34 +157,32 @@ public class MapCell extends MyAgent {
     }
 
     protected void beExtinguished() {
-        this.setOnFire(false);
+        this.burningRate -= 20;
+        if (this.burningRate == 0) {
+            this.setOnFire(false);
+        }
     }
 
     public void setColor(Color color) {
         this.color = color;
     }
 
-    @Override
     public int getX() {
         return x;
     }
 
-    @Override
     public void setX(int x) {
         this.x = x;
     }
 
-    @Override
     public void setY(int y) {
         this.y = y;
     }
 
-    @Override
     public int getY() {
         return y;
     }
 
-    @Override
     public void draw(SimGraphics simGraphics) {
         simGraphics.drawRect(getColor());
     }

@@ -17,6 +17,8 @@ public class MapState {
     private static List<MapCell> fires = new ArrayList<>();
 
     private static HashSet<MapCell> fireCell = new HashSet<>();
+    public static MapCell fireCell1;
+
 
     final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
@@ -32,7 +34,7 @@ public class MapState {
             do {
                 int fireX = rand.nextInt(envWidth);
                 int fireY = rand.nextInt(envHeight);
-                newFireCell = new MapCell(launcher,fireX,fireY);
+                newFireCell = new MapCell(fireX,fireY);
             } while (fires.contains(newFireCell));
             fires.add(newFireCell);
         }
@@ -49,7 +51,7 @@ public class MapState {
                 while (i.hasNext())
                     i.next().update();
             }
-        }, 0, SimulationLauncher.UPDATE_RATE, TimeUnit.MILLISECONDS);
+        }, 0, SimulationLauncher.WORLD_UPDATE_RATE, TimeUnit.MILLISECONDS);
     }
 
     public MapCell[][] getGrid() {
@@ -92,7 +94,7 @@ public class MapState {
         for(int i = 0; i < width; i++) {
             for (int j = 0; j < length; j++) {
                 if(i == 0 && j == 0){ // first column &  first row
-                        mapCell[i][j] = new MapCell(launcher,i, j, randVeg, randHum, 0);
+                        mapCell[i][j] = new MapCell(i, j, randVeg, randHum, 0);
                 }
                 else if(j == 0){ // first row
                     if(mapCell[i-1][j].getVegetationDensity() + range > 100){
@@ -125,7 +127,7 @@ public class MapState {
                     if(newVeg == 0)
                         newVeg = 1;
 
-                    mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0);
+                    mapCell[i][j] = new MapCell(i, j, newVeg, newHum, 0);
                 }
                 else{ // other columns
                     if(i == 0){
@@ -185,7 +187,7 @@ public class MapState {
                     newVeg = rand.nextInt(vegMax - vegMin) + vegMin;
                     newHum = rand.nextInt(humMax - humMin) + humMin;
 
-                    mapCell[i][j] = new MapCell(launcher, i, j, newVeg, newHum, 0);
+                    mapCell[i][j] = new MapCell(i, j, newVeg, newHum, 0);
                 }
             }
         }
@@ -203,6 +205,7 @@ public class MapState {
         // Generate Fire cells
         for (int i = 0; i < fires.size(); i++) {
             MapCell f = fires.get(i);
+            fireCell1 = f;
             MapCell cell = mapCell[f.getX()][f.getY()];
             cell.setOnFire(true);
             fireCell.add(cell);
@@ -1243,7 +1246,7 @@ public class MapState {
         return false;
     }
 
-    public int calculateDist(int x1, int y1, int x2, int y2){
+    public static int calculateDist(int x1, int y1, int x2, int y2){
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
 }

@@ -2,6 +2,8 @@ package launchers;
 
 import agents.FireStation;
 import agents.Firefighter;
+import agents.MyAgent;
+import jade.core.AID;
 import jade.core.ProfileImpl;
 import jade.wrapper.StaleProxyException;
 import sajas.core.Runtime;
@@ -21,8 +23,10 @@ import java.util.List;
 public class SimulationLauncher extends Repast3Launcher {
 
     // World update fixed rate
-    public static int UPDATE_RATE = 1000;
-    public static int MAX_NUM_FIRES = 3;
+    public static int WORLD_UPDATE_RATE = 1000;
+    public static int MAX_NUM_FIRES = 1;
+
+    public static int FF_UPDATE_RATE = 300;
 
     private Random rand;
 
@@ -30,16 +34,18 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private DisplaySurface displaySurface;
     private Object2DGrid environment;   // Minimum size             = 150x75
-    private int envWidth = 200;         // Recommended size          = 200x100
-    private int envHeight = 100;        // Recommended maximum size = 800X400
+    private int envWidth = 150;         // Recommended size          = 200x100
+    private int envHeight = 75;        // Recommended maximum size = 800X400
                                         // Absolute Repast Maximum = 1200x600
     private MapState mapState;
 
-    private int numFirefighters = 1;
+    private int numFirefighters = 3;
     private int numFires = 1;
 
     private FireStation fireStation;
     private List<Firefighter> firefighters;
+
+    public Map<AID, MyAgent> agents = new HashMap();
 
     public SimulationLauncher() {
         setRand(new Random());
@@ -125,14 +131,16 @@ public class SimulationLauncher extends Repast3Launcher {
         setFireStation(new FireStation(this));
         environment.putObjectAt(fireStation.getX(), fireStation.getY(), fireStation);
         mainContainer.acceptNewAgent("FireStation", fireStation).start();
+        agents.put(fireStation.getAID(), fireStation);
     }
 
     private void launchFirefighters() throws StaleProxyException {
         List<Firefighter> firefighters = new ArrayList<>();
         for (int i = 0; i < numFirefighters; i++) {
-            Firefighter ff = new Firefighter(this);
+            Firefighter ff = new Firefighter(this, 0, i);
             environment.putObjectAt(ff.getX(), ff.getY(), ff);
             mainContainer.acceptNewAgent("firefighter-" + i, ff).start();
+            agents.put(ff.getAID(), ff);
             firefighters.add(ff);
         }
         setFirefighters(firefighters);
