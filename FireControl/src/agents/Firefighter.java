@@ -29,6 +29,7 @@ public class Firefighter extends MyAgent {
 
     State currentState;
     int[] destination = new int[2];
+    int[] fireDestination = new int[2];
     int[] pos;
 
     int speed;
@@ -61,10 +62,10 @@ public class Firefighter extends MyAgent {
                 perception[i][j] = cell;
                 if(cell != null && cell.isOnFire()) {
                     fires.add(cell);
-                    //if (MapState.calculateDist(getX(),getY(),cell.getX(),cell.getY()) <= extinguishDistance) {
+                    if (MapState.calculateDist(getX(),getY(),cell.getX(),cell.getY()) <= extinguishDistance) {
                         this.currentState = State.Extinguishing;
                         firesToExtinguish.add(cell);
-                    //}
+                    }
                 }
             }
     }
@@ -192,6 +193,14 @@ public class Firefighter extends MyAgent {
                     break;
                 }
                 case Driving: {
+                    if(!fires.isEmpty() && firesToExtinguish.isEmpty()) {
+                        Iterator<MapCell> i = fires.iterator();
+                        MapCell cell = i.next();
+                        destination[0] = cell.getX();
+                        destination[1] = cell.getY();
+
+                    }
+                    else
                     /*if (destination[0] == -1) {
                         if (water < 0.5 * maxCapacity) {
                             currentState = State.Refilling;
@@ -217,7 +226,15 @@ public class Firefighter extends MyAgent {
                     break;
                 }
                 case Extinguishing: {
-                    if(fires.isEmpty() && destination[0] == state.getX() && destination[1] == state.getY()){
+                    if(!fires.isEmpty() && firesToExtinguish.isEmpty()) {
+                        Iterator<MapCell> i = fires.iterator();
+                        MapCell cell = i.next();
+                        destination[0] = cell.getX();
+                        destination[1] = cell.getY();
+                        currentState = State.Driving;
+
+                    }
+                    else if(fires.isEmpty() && destination[0] == state.getX() && destination[1] == state.getY()){
                         System.out.println("FIRES EMPTY!");
                         requestNearestFire();
                         currentState = State.Driving;

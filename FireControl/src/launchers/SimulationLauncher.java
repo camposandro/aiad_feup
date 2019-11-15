@@ -24,7 +24,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     // World update fixed rate
     public static int WORLD_UPDATE_RATE = 2000;
-    public static int MAX_NUM_FIRES = 3;
+    public static int MAX_NUM_FIRES = 10;
 
     public static int FF_UPDATE_RATE = 300;
 
@@ -39,7 +39,7 @@ public class SimulationLauncher extends Repast3Launcher {
                                         // Absolute Repast Maximum = 1200x600
     private MapState mapState;
 
-    private int numFirefighters = 2;
+    private int numFirefighters = 10;
     private int numFires = 1;
 
     private FireStation fireStation;

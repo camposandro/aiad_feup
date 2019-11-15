@@ -152,6 +152,10 @@ public class MapCell implements Drawable, Serializable  {
         if (burnedPercentage < 0 || burnedPercentage > 100) {
             return;
         }
+        else if(burnedPercentage > 100){
+            this.burnedPercentage = 100;
+            return;
+        }
         this.burnedPercentage = burnedPercentage;
     }
 
