@@ -20,11 +20,10 @@ import java.util.stream.Collectors;
 public class Firefighter extends MyAgent {
 
     int viewingDistance = 3;
-    MapCell[][] perception = new MapCell[viewingDistance * 2][viewingDistance * 2];
+    MapCell[][] perception = new MapCell[viewingDistance * 2 + 1][viewingDistance * 2 + 1];
     HashSet<MapCell> fires = new HashSet();
-    int extinguishDistance = 1;
-    private int fireTicks = 1;
-    private int ticksPeriod = 0;
+    HashSet<MapCell> firesToExtinguish = new HashSet();
+    int extinguishDistance = 2;
 
     enum State {Waiting, Driving, Searching, Extinguishing, Refilling}
 
@@ -37,6 +36,8 @@ public class Firefighter extends MyAgent {
     int water;
     int maxCapacity;
     int pumpingVelocity;
+
+    List<MapCell> cells = new ArrayList<>();
 
     public Firefighter(SimulationLauncher launcher, int x, int y) {
         super(launcher, x, y);
@@ -53,13 +54,17 @@ public class Firefighter extends MyAgent {
 
     protected void updatePerception() {
         fires.clear();
-        for(int i = 0; i < viewingDistance * 2; i++)
-            for(int j = 0; j < viewingDistance * 2; j++) {
+        firesToExtinguish.clear();
+        for(int i = 0; i < viewingDistance * 2 + 1; i++)
+            for(int j = 0; j < viewingDistance * 2 + 1; j++) {
                 MapCell cell = MapState.getGridPos(state.getX() - viewingDistance + i, state.getY() - viewingDistance + j);
                 perception[i][j] = cell;
                 if(cell != null && cell.isOnFire()) {
                     fires.add(cell);
-                    this.currentState = State.Extinguishing;
+                    //if (MapState.calculateDist(getX(),getY(),cell.getX(),cell.getY()) <= extinguishDistance) {
+                        this.currentState = State.Extinguishing;
+                        firesToExtinguish.add(cell);
+                    //}
                 }
             }
     }
@@ -96,7 +101,7 @@ public class Firefighter extends MyAgent {
 
     private void extinguishFire() {
         water -= 10;
-        Iterator<MapCell> i = fires.iterator();
+        Iterator<MapCell> i = firesToExtinguish.iterator();
 
         while (i.hasNext())
             i.next().beExtinguished();
@@ -104,6 +109,7 @@ public class Firefighter extends MyAgent {
 
     public class FirefighterBehaviour extends TickerBehaviour {
         Agent agent;
+        int numReceivedMsg = 0;
 
         public FirefighterBehaviour(Agent a, long period) {
             super(a, period);
@@ -118,44 +124,47 @@ public class Firefighter extends MyAgent {
                     reqMsg.addReceiver(firefighterAid);
                     reqMsg.setConversationId("request-fires");
                     agent.send(reqMsg);
-                    //System.out.println(reqMsg);
+                    System.out.println(reqMsg);
                 }
             }
             handleFiresAnswer();
         }
 
+        public void calcDestination() {
+            if(!cells.isEmpty()) {
+                List<Integer> cellDists = cells.stream()
+                        .map(c -> MapState.calculateDist(c.getX(), c.getY(), getX(), getY()))
+                        .collect(Collectors.toList());
+                int minDistCellIndex = cellDists.indexOf(Collections.min(cellDists));
+                setDestination(cells.get(minDistCellIndex).getX(), cells.get(minDistCellIndex).getY());
+            } else {
+                Random rand = new Random();
+                int x = rand.nextInt(getEnvironment().getEnvWidth());
+                int y = rand.nextInt(getEnvironment().getEnvHeight());
+                setDestination(x,y);
+                System.out.println(getName() + " is ROAMING BOIIII");
+            }
+        }
+
         public void handleFiresAnswer() {
             MessageTemplate mt = MessageTemplate.MatchConversationId("handle-fires-answer");
             ACLMessage replyMsg = agent.receive(mt);
-            System.out.println(replyMsg);
             if (replyMsg != null && replyMsg.getPerformative() == ACLMessage.INFORM) {
+                System.out.println(replyMsg);
                 String fireRegex = "(\\d+):(\\d+),?";
                 Pattern pattern = Pattern.compile(fireRegex);
                 Matcher matcher = pattern.matcher(replyMsg.getContent());
-
-                List<MapCell> cells = new ArrayList<MapCell>();
                 while (matcher.find()) {
-                    System.out.println(matcher.group(1));
-                    System.out.println(matcher.group(2));
                     int fireX = Integer.valueOf(matcher.group(1));
                     int fireY = Integer.valueOf(matcher.group(2));
-                    System.out.println("fireX=" + fireX + "," + fireY);
                     cells.add(new MapCell(fireX,fireY));
                 }
-
-                if(!cells.isEmpty()) {
-                    List<Integer> cellDists = cells.stream()
-                            .map(c -> MapState.calculateDist(c.getX(), c.getY(), getX(), getY()))
-                            .collect(Collectors.toList());
-                    int minDistCellIndex = cellDists.indexOf(Collections.min(cellDists));
-                    setDestination(cells.get(minDistCellIndex).getX(), cells.get(minDistCellIndex).getY());
-                } else {
-                    Random rand = new Random();
-                    int x = rand.nextInt(getEnvironment().getEnvWidth());
-                    int y = rand.nextInt(getEnvironment().getEnvHeight());
-                    setDestination(x,y);
-                    System.out.println("ROAMING BOIIII");
-                }
+            }
+            numReceivedMsg++;
+            if (numReceivedMsg == getEnvironment().getFirefighters().size() - 1) {
+                System.out.println("RECEIVED ALL MESSAGES!");
+                calcDestination();
+                numReceivedMsg = 0;
             }
         }
 
@@ -183,7 +192,7 @@ public class Firefighter extends MyAgent {
                     break;
                 }
                 case Driving: {
-                    if (destination[0] == -1) {
+                    /*if (destination[0] == -1) {
                         if (water < 0.5 * maxCapacity) {
                             currentState = State.Refilling;
                             return;
@@ -194,23 +203,29 @@ public class Firefighter extends MyAgent {
                     else if(visibleFire(perception)) {
                         currentState = State.Extinguishing;
                         return;
-                    */
-                    } else
-                        move();
+                    } else*/
+                    if(destination[0] == state.getX() && destination[1] == state.getY()) {
+                        requestNearestFire();
+                        if (firesToExtinguish.isEmpty()) {
+
+                        }
+                    }
+                    move();
                     break;
                 }
                 case Searching: {
                     break;
                 }
                 case Extinguishing: {
-                    if(fires.isEmpty()){
+                    if(fires.isEmpty() && destination[0] == state.getX() && destination[1] == state.getY()){
                         System.out.println("FIRES EMPTY!");
                         requestNearestFire();
                         currentState = State.Driving;
                     } else {
-                        Iterator<MapCell> i = fires.iterator();
+                        Iterator<MapCell> i = firesToExtinguish.iterator();
                         while (i.hasNext())
                             i.next().beExtinguished();
+                        currentState = State.Driving;
                     }/*
                     else if(dangerousFire(perception)){
                         moveBack(); //esta fnção também vai ser fdd

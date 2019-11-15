@@ -21,6 +21,7 @@ public class MapCell implements Drawable, Serializable  {
     private int burningRate = 0;
     private int soilType; //0 - vegetation, 1 - asphalt, 2 - dirt, 3 - water, 4 - house
     private Color color;
+    private int propsCoefficient = 6;
 
     public MapCell() {
     }
@@ -44,7 +45,7 @@ public class MapCell implements Drawable, Serializable  {
     }
 
     protected void setProbOfFire( int densitySum){
-        this.probOfFire = densitySum / 6;
+        this.probOfFire = densitySum / propsCoefficient;
     }
 
     private Color calcColor() {
@@ -91,7 +92,7 @@ public class MapCell implements Drawable, Serializable  {
         if (burnedPercentage == 100) {
             return;
         }
-        if (soilType != 3 && random <= probOfFire) {
+        if (soilType != 3 && soilType != 1 && random <= probOfFire) {
             this.onFire = true;
             setColor(this.calcColor());
             MapState.getFirecells().add(this);
@@ -148,7 +149,9 @@ public class MapCell implements Drawable, Serializable  {
     }
 
     public void setBurnedPercentage(int burnedPercentage) {
-        assert burnedPercentage >= 0 && burnedPercentage <= 100;
+        if (burnedPercentage < 0 || burnedPercentage > 100) {
+            return;
+        }
         this.burnedPercentage = burnedPercentage;
     }
 
@@ -157,9 +160,11 @@ public class MapCell implements Drawable, Serializable  {
     }
 
     protected void beExtinguished() {
-        this.burningRate -= 20;
-        if (this.burningRate == 0) {
+        propsCoefficient += 2;
+        this.burningRate -= 40;
+        if (this.burningRate <= 0) {
             this.setOnFire(false);
+            this.probOfFire = 0;
         }
     }
 
@@ -200,7 +205,7 @@ public class MapCell implements Drawable, Serializable  {
                     neighbours[i].catchFireProbability(fireProbability);
                 }
             }
-            setBurnedPercentage(burnedPercentage + 5);
+            setBurnedPercentage(burnedPercentage + 5 * (100- humidityPercentage)/100);
             setColor(calcColor());
         }
     }
