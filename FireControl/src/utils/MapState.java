@@ -222,11 +222,11 @@ public class MapState {
 
     public MapCell[][] generateLakes(MapCell[][] map){
         Random rand = new Random();
-        int numOfLakes = 0;
-        if(map.length * map[0].length > 5000)
+        int numOfLakes = SimulationLauncher.NUM_LAKES;
+        if(SimulationLauncher.RANDOMWORLD && map.length * map[0].length > 5000)
             numOfLakes = (int)Math.sqrt(rand.nextInt(map.length * map[0].length / 5000));
 
-        int lakeMaximumRadius = 12;
+        int lakeMaximumRadius = SimulationLauncher.LAKE_MAX_RADIUS;
 
         int[][] lakePositions = new int[numOfLakes][2];
 
@@ -300,10 +300,10 @@ public class MapState {
 
     public MapCell[][] generateRivers(MapCell[][] map){
         Random rand = new Random();
-        int numOfRivers = 0;
-        if(map.length * map[0].length > 10000)
+        int numOfRivers = SimulationLauncher.NUM_RIVERS;
+        if(SimulationLauncher.RANDOMWORLD && map.length * map[0].length > 10000)
             numOfRivers = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 10000));
-        int riverMaximumWidth = 6;
+        int riverMaximumWidth = SimulationLauncher.RIVER_MAX_WIDTH;
 
         int[][] riverPositions = new int[numOfRivers][2];
 
@@ -368,11 +368,18 @@ public class MapState {
 
     public MapCell[][] generateVillages(MapCell[][] map){
         Random rand = new Random();
-        int numOfVillages = 0;
-        if(map.length * map[0].length > 5000)
+        int numOfVillages = SimulationLauncher.NUM_VILLAGES;
+        if(SimulationLauncher.RANDOMWORLD && map.length * map[0].length > 5000)
             numOfVillages = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 5000));
 
-        int maxHousesPerVillage = 32;
+        int maxHousesPerVillage;
+        if(SimulationLauncher.RANDOMWORLD){
+            maxHousesPerVillage = 32;
+        }
+        else{
+            maxHousesPerVillage = SimulationLauncher.VILLAGE_MAX_HOUSES;
+        }
+
         int[] housesPerVillage = new int[numOfVillages];
 
         int[][] villagePositions = new int[numOfVillages][2];
@@ -403,7 +410,14 @@ public class MapState {
 
     public MapCell[][] generateRemoteHouses(MapCell[][] map){
         Random rand = new Random();
-        int numberOfRemoteHouses = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 10000)) + 1;
+        int numberOfRemoteHouses;
+
+        if(SimulationLauncher.RANDOMWORLD){
+            numberOfRemoteHouses = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 10000)) + 1;
+        }
+        else{
+            numberOfRemoteHouses = SimulationLauncher.NUM_REMOTE_HOUSES;
+        }
 
         int[] roadConnection = new int[2];
         int dirtRoadLength = rand.nextInt(15) + 5;

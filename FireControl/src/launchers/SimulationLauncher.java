@@ -21,25 +21,40 @@ import java.util.*;
 import java.util.List;
 
 public class SimulationLauncher extends Repast3Launcher {
+    //-------------------------------------------WORLD SELECTION--------------------------------------------//
+    public static int WORLD_WIDTH = 150;        // Recommended size = 200
+    public static int WORLD_HEIGHT = 75;       // Recommended size = 100
 
-    // World update fixed rate
-    public static int WORLD_UPDATE_RATE = 2000;
     public static int MAX_NUM_FIRES = 1;
+    public static int NUM_FIREFIGHTERS = 1;
 
+    public static boolean RANDOMWORLD = false;
+
+    public static int NUM_RIVERS = 1;
+    public static int RIVER_MAX_WIDTH = 5;
+    public static int NUM_LAKES = 1;
+    public static int LAKE_MAX_RADIUS = 12;
+
+    public static int NUM_VILLAGES = 1;
+    public static int VILLAGE_MAX_HOUSES = 64;
+
+    public static int NUM_REMOTE_HOUSES = 2;
+
+    public static int WORLD_UPDATE_RATE = 2000; // World update fixed rate
     public static int FF_UPDATE_RATE = 300;
-
+    //-----------------------------------------------------------------------------------------------------//
     private Random rand;
 
     private ContainerController mainContainer;
 
     private DisplaySurface displaySurface;
-    private Object2DGrid environment;   // Minimum size             = 150x75
-    private int envWidth = 150;         // Recommended size          = 200x100
-    private int envHeight = 75;        // Recommended maximum size = 800X400
-                                        // Absolute Repast Maximum = 1200x600
+    private Object2DGrid environment;
+    private int envWidth = WORLD_WIDTH;
+    private int envHeight = WORLD_HEIGHT;
+
     private MapState mapState;
 
-    private int numFirefighters = 1;
+    private int numFirefighters = NUM_FIREFIGHTERS;
     private int numFires = 1;
 
     private FireStation fireStation;
