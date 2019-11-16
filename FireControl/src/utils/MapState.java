@@ -11,14 +11,13 @@ import launchers.SimulationLauncher;
 public class MapState {
     private static MapCell[][] grid;
 
-    private static int envWidth;
-    private static int envHeight;
+    public static int envWidth;
+    public static int envHeight;
 
     private static List<MapCell> fires = new ArrayList<>();
 
     private static HashSet<MapCell> fireCell = new HashSet<>();
     public static MapCell fireCell1;
-
 
     final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 

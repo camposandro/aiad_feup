@@ -2,7 +2,7 @@ package utils;
 
 public class AgentState {
 
-    private int x;
+    protected int x;
     private int y;
     private int health;
 

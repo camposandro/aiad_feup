@@ -23,9 +23,6 @@ public class MapCell implements Drawable, Serializable  {
     private Color color;
     private int propsCoefficient = 6;
 
-    public MapCell() {
-    }
-
     public MapCell(int x, int y) {
         this.x = x;
         this.y = y;
@@ -44,7 +41,7 @@ public class MapCell implements Drawable, Serializable  {
         setProbOfFire( humidityPercentage + (100 - vegetationDensity));
     }
 
-    protected void setProbOfFire( int densitySum){
+    protected void setProbOfFire(int densitySum){
         this.probOfFire = densitySum / propsCoefficient;
     }
 
