@@ -18,6 +18,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static java.util.function.Predicate.not;
+
 public class Firefighter extends MyAgent {
 
     private enum State {Waiting, Driving, Searching, Extinguishing, Refilling, Return}
@@ -38,10 +40,14 @@ public class Firefighter extends MyAgent {
     private HashSet<MapCell> firesToExtinguish;
 
     private List<MapCell> cells = new ArrayList<>();
+    private List<MapCell> ocuppiedCells = new ArrayList<>();
 
     private State currentState;
 
     private ParallelBehaviour behaviour;
+
+    MessageTemplate mtRequestFires;
+    MessageTemplate mtProposeCell;
 
     public Firefighter(SimulationLauncher launcher, int x, int y) {
         super(launcher, x, y);
@@ -60,7 +66,7 @@ public class Firefighter extends MyAgent {
             }
         };
         behaviour.addSubBehaviour(new MessageProcessingBehaviour(this));
-        behaviour.addSubBehaviour(new PerceptionBehaviour(this));
+        behaviour.addSubBehaviour(new PerceptionBehaviour(this, SimulationLauncher.FF_UPDATE_RATE));
         behaviour.addSubBehaviour(new MovingBehaviour(this, SimulationLauncher.FF_UPDATE_RATE));
         this.addBehaviour(behaviour);
     }
@@ -108,11 +114,10 @@ public class Firefighter extends MyAgent {
 
     public class MessageProcessingBehaviour extends Behaviour {
         Firefighter ff;
-        int numReceivedMsg;
+        int numReceivedMsg = 0;
 
         public MessageProcessingBehaviour(Firefighter ff) {
             this.ff = ff;
-            numReceivedMsg = 0;
         }
 
         public void receiveInitialFire() {
@@ -128,42 +133,52 @@ public class Firefighter extends MyAgent {
                     int destX = Integer.valueOf(matcher.group(1));
                     int destY = Integer.valueOf(matcher.group(2));
                     setDestination(destX, destY);
+                    currentState = State.Driving;
                 }
-                currentState = State.Driving;
+            } else {
+                block();
             }
         }
 
         public void requestNearestFire() {
             ACLMessage reqMsg = new ACLMessage(ACLMessage.REQUEST);
             for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
-                if (entry.getValue() instanceof Firefighter) {
+                if (entry.getKey() != ff.getAID() && entry.getValue() instanceof Firefighter) {
                     AID firefighterAid = entry.getKey();
                     reqMsg.addReceiver(firefighterAid);
-                    reqMsg.setConversationId("request-fires");
-                    ff.send(reqMsg);
-                    System.out.println(reqMsg);
                 }
             }
+            reqMsg.setConversationId("request-fires");
+            reqMsg.setReplyWith("fire-req" + System.currentTimeMillis());
+            ff.send(reqMsg);
+
+            mtRequestFires =  MessageTemplate.and(MessageTemplate.MatchConversationId("request-fires"),
+                    MessageTemplate.MatchInReplyTo(reqMsg.getReplyWith()));
+
+            System.out.println(reqMsg);
+
             handleFiresAnswer();
         }
 
         public void handleFiresAnswer() {
-            MessageTemplate mt = MessageTemplate.MatchConversationId("handle-fires-answer");
-            ACLMessage replyMsg = ff.receive(mt);
+            ACLMessage replyMsg = ff.receive(mtRequestFires);
             if (replyMsg != null && replyMsg.getPerformative() == ACLMessage.INFORM) {
-                System.out.println(replyMsg);
                 String fireRegex = "(\\d+):(\\d+),?";
                 Pattern pattern = Pattern.compile(fireRegex);
                 Matcher matcher = pattern.matcher(replyMsg.getContent());
+                if (matcher.matches()) {
+                    System.out.println(replyMsg);
+                }
                 while (matcher.find()) {
                     int fireX = Integer.valueOf(matcher.group(1));
                     int fireY = Integer.valueOf(matcher.group(2));
                     cells.add(new MapCell(fireX,fireY));
                 }
+            } else {
+                block();
             }
             numReceivedMsg++;
             if (numReceivedMsg == getEnvironment().getFirefighters().size() - 1) {
-                System.out.println("RECEIVED ALL MESSAGES!");
                 calcDestination();
                 numReceivedMsg = 0;
             }
@@ -181,6 +196,31 @@ public class Firefighter extends MyAgent {
             }
         }
 
+        public void sendPerceptionFires() {
+            ACLMessage reqMsg = ff.receive(mtRequestFires);
+            // Fires request message received
+            if (reqMsg != null && reqMsg.getPerformative() == ACLMessage.REQUEST) {
+                // Refuse own messages
+                if (reqMsg.getSender() == getAID()) {
+                    return;
+                }
+                ACLMessage reply = reqMsg.createReply();
+                reply.setPerformative(ACLMessage.INFORM);
+
+                String firesStr = "";
+                Iterator<MapCell> i = fires.iterator();
+                while (i.hasNext()) {
+                    MapCell cell = i.next();
+                    firesStr += String.format("%d:%d,", cell.getX(), cell.getY());
+                }
+                reply.setContent(firesStr);
+
+                ff.send(reply);
+            } else {
+                block();
+            }
+        }
+
         @Override
         public void action() {
             switch (currentState) {
@@ -189,9 +229,13 @@ public class Firefighter extends MyAgent {
                     break;
                 }
                 case Driving: {
+                    /*if(!fires.isEmpty() && firesToExtinguish.isEmpty()) {
+                        // Ask for a non-occupied cell
+                        cellCallForProposal();
+                    }
                     if(destination[0] == state.getX() && destination[1] == state.getY()) {
                         requestNearestFire();
-                    }
+                    }*/
                     break;
                 }
                 case Extinguishing: {
@@ -214,38 +258,98 @@ public class Firefighter extends MyAgent {
     public class MovingBehaviour extends TickerBehaviour {
         Firefighter ff;
         int numSearchingTicks = 0;
+        int numReceivedMsg = 0;
 
         public MovingBehaviour(Firefighter ff, long period) {
             super(ff, period);
             this.ff = ff;
         }
 
-        public void calcDestination() {
-            if(!cells.isEmpty()) {
-                List<Integer> cellDists = cells.stream()
-                        .map(c -> MapState.calculateDist(c.getX(), c.getY(), getX(), getY()))
-                        .collect(Collectors.toList());
-                int minDistCellIndex = cellDists.indexOf(Collections.min(cellDists));
-                setDestination(cells.get(minDistCellIndex).getX(), cells.get(minDistCellIndex).getY());
-            } else {
-                currentState = State.Searching;
+        public void handleMove() {
+            requestOcuppiedCells();
+            handleOcuppiedCells();
+            if (numReceivedMsg == getEnvironment().getFirefighters().size() - 1) {
+                sendNextCell();
+                numReceivedMsg = 0;
             }
+        }
+
+        public void requestOcuppiedCells() {
+            ACLMessage reqMsg = new ACLMessage(ACLMessage.REQUEST);
+            for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
+                if (entry.getKey() != ff.getAID() && entry.getValue() instanceof Firefighter) {
+                    AID firefighterAid = entry.getKey();
+                    reqMsg.addReceiver(firefighterAid);
+                }
+            }
+            reqMsg.setConversationId("cell-request");
+            reqMsg.setReplyWith("cell-req" + System.currentTimeMillis());
+
+            ff.send(reqMsg);
+
+            // Prepare the template to get proposals
+            mtProposeCell = MessageTemplate.and(MessageTemplate.MatchConversationId("cell-request"),
+                    MessageTemplate.MatchInReplyTo(reqMsg.getReplyWith()));
+
+            System.out.println(reqMsg);
+
+            handleOcuppiedCells();
+        }
+
+        public void handleOcuppiedCells() {
+            ACLMessage replyMsg = ff.receive(mtProposeCell);
+            if (replyMsg != null && replyMsg.getPerformative() == ACLMessage.REQUEST) {
+                String fireRegex = "(\\d+):(\\d+)";
+                Pattern pattern = Pattern.compile(fireRegex);
+                Matcher matcher = pattern.matcher(replyMsg.getContent());
+                if (matcher.matches()) {
+                    int cellX = Integer.valueOf(matcher.group(1));
+                    int cellY = Integer.valueOf(matcher.group(2));
+                    ocuppiedCells.add(new MapCell(cellX,cellY));
+                }
+            } else {
+                block();
+            }
+            numReceivedMsg++;
+        }
+
+        public void sendNextCell() {
+            ACLMessage reply = new ACLMessage(ACLMessage.REQUEST);
+            List<MapCell> availableCells = cells.stream()
+                    .filter(not(ocuppiedCells::contains))
+                    .collect(Collectors.toList());
+            Random rand = new Random();
+            MapCell nextCell = availableCells.get(rand.nextInt(availableCells.size()));
+            reply.setPerformative(ACLMessage.INFORM);
+            for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
+                if (entry.getKey() != ff.getAID() && entry.getValue() instanceof Firefighter) {
+                    AID firefighterAid = entry.getKey();
+                    reply.addReceiver(firefighterAid);
+                }
+            }
+            String posStr = String.format("%d:%d,", nextCell.getX(), nextCell.getY());
+            reply.setContent(posStr);
+            ff.send(reply);
+
+            setDestination(nextCell.getX(),nextCell.getY());
         }
 
         protected void onTick() {
             switch(currentState) {
                 case Driving: {
-                    if(!fires.isEmpty() && firesToExtinguish.isEmpty()) {
+                    /*if(!fires.isEmpty() && firesToExtinguish.isEmpty()) {
                         Iterator<MapCell> i = fires.iterator();
                         MapCell cell = i.next();
                         destination[0] = cell.getX();
                         destination[1] = cell.getY();
-                    }
+                    }*/
+                    handleMove();
                     move();
                     break;
                 }
                 case Searching: {
                     if (numSearchingTicks == SimulationLauncher.NUM_ROAMING_TICKS) {
+                        System.out.println(getName() + "is GOING TO THE BASE!");
                         setDestination(0,0);
                         currentState = State.Return;
                     } else if (!fires.isEmpty()) {
@@ -302,58 +406,45 @@ public class Firefighter extends MyAgent {
         }
     }
 
-    public class PerceptionBehaviour extends CyclicBehaviour {
+    public class PerceptionBehaviour extends TickerBehaviour {
         Firefighter ff;
 
-        public PerceptionBehaviour(Firefighter ff) {
+        public PerceptionBehaviour(Firefighter ff, long period) {
+            super(ff, period);
             this.ff = ff;
         }
 
         public void updatePerception() {
+            clearFires();
+            for (int i = 0; i < VIEWING_DIST * 2 + 1; i++) {
+                for (int j = 0; j < VIEWING_DIST * 2 + 1; j++) {
+                    int cellX = state.getX() - VIEWING_DIST + i;
+                    int cellY = state.getY() - VIEWING_DIST + j;
+                    MapCell cell = MapState.getGridPos(cellX, cellY);
+                    processCell(i, j, cell);
+                }
+            }
+        }
+
+        public void clearFires() {
             fires.clear();
             firesToExtinguish.clear();
-            for(int i = 0; i < VIEWING_DIST * 2 + 1; i++)
-                for(int j = 0; j < VIEWING_DIST * 2 + 1; j++) {
-                    MapCell cell = MapState.getGridPos(state.getX() - VIEWING_DIST + i, state.getY() - VIEWING_DIST + j);
-                    perception[i][j] = cell;
-                    if(cell != null && cell.isOnFire()) {
-                        fires.add(cell);
-                        if (MapState.calculateDist(getX(),getY(),cell.getX(),cell.getY()) <= EXTINGUISHING_DIST) {
-                            ff.currentState = State.Extinguishing;
-                            firesToExtinguish.add(cell);
-                        }
-                    }
-                }
         }
 
-        public void sendPerceptionFires() {
-            // Prepare the template to get proposals
-            MessageTemplate mt = MessageTemplate.MatchConversationId("request-fires");
-            ACLMessage reqMsg = ff.receive(mt);
-            // Refuse own messages
-            if (reqMsg == null || reqMsg.getSender() == getAID()) {
-                return;
-            }
-            // Fires request message received
-            if (reqMsg != null && reqMsg.getPerformative() == ACLMessage.REQUEST) {
-                ACLMessage reply = reqMsg.createReply();
-                reply.setPerformative(ACLMessage.INFORM);
-                String firesStr = "";
-                Iterator<MapCell> i = fires.iterator();
-                while (i.hasNext()) {
-                    MapCell cell = i.next();
-                    firesStr += String.format("%d:%d,", cell.getX(), cell.getY());
+        public void processCell(int i, int j, MapCell cell) {
+            perception[i][j] = cell;
+            if (cell != null && cell.isOnFire()) {
+                fires.add(cell);
+                if (MapState.calculateDist(cell, ff) <= EXTINGUISHING_DIST) {
+                    firesToExtinguish.add(cell);
+                    currentState = State.Extinguishing;
                 }
-
-                reply.setConversationId("handle-fires-answer");
-                reply.setContent(firesStr);
-                ff.send(reply);
             }
         }
 
-        public void action() {
+        @Override
+        protected void onTick() {
             updatePerception();
-            sendPerceptionFires();
         }
     }
 }

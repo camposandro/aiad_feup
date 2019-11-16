@@ -43,7 +43,7 @@ public class FireStation extends MyAgent {
                     String dest = String.format("%d:%d", a.getX() - getEnvironment().getFirefighters().size() / 2 + 2 * i, a.getY() - getEnvironment().getFirefighters().size() / 2  + 2 * i);
                     informMsg.setContent(dest);
                     agent.send(informMsg);
-                    System.out.println("Message " + informMsg + " sent");
+                    System.out.println(informMsg);
                 }
                 i++;
             }
