@@ -67,7 +67,7 @@ public class MapCell implements Drawable, Serializable  {
         } else {
             h = humidityPercentage * 100 / 360 * 0.003f + 0.15f;
             s = (vegetationDensity * 0.5f + 50) * 0.01f;
-            v = 1 - (burnedPercentage * 0.75f);
+            v = 1 - (burnedPercentage * 0.75f)/100;
 
             a = Color.getHSBColor(h, s, v);
         }
@@ -162,7 +162,7 @@ public class MapCell implements Drawable, Serializable  {
 
     protected void beExtinguished() {
         propsCoefficient += 2;
-        this.burningRate -= 40;
+        //this.burningRate -= 40;
         if (this.burningRate <= 0) {
             this.setOnFire(false);
             this.probOfFire = 0;

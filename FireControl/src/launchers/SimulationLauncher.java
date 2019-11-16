@@ -25,7 +25,7 @@ public class SimulationLauncher extends Repast3Launcher {
     // World update fixed rate
     public static int WORLD_UPDATE_RATE = 2000;
     public static int FF_UPDATE_RATE = 300;
-    public static int MAX_NUM_FIRES = 1;
+    public static int MAX_NUM_FIRES = 5;
     public static int NUM_FIREFIGHTERS = 2;
     public static int NUM_ROAMING_TICKS = 10;
 
@@ -92,7 +92,6 @@ public class SimulationLauncher extends Repast3Launcher {
         Object2DDisplay firefightersDisplay = new Object2DDisplay(environment);
         firefightersDisplay.setObjectList(firefighters);
         displaySurface.addDisplayable(firefightersDisplay, "Show Firefighters");
-        displaySurface.setSize(ENV_WIDTH,ENV_HEIGHT);
         displaySurface.setBackground(Color.WHITE);
         displaySurface.display();
     }
@@ -137,6 +136,17 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     private void updateAgents() {
+        List<Firefighter> nextFirefighters = new ArrayList<>();
+        for (int i = 0; i < firefighters.size(); i++) {
+            Firefighter ff = firefighters.get(i);
+            if (ff.getState().getHealth() <= 0) {
+                mainContainer.removeLocalAgent(ff);
+                agents.remove(ff.getAID(), ff);
+            } else {
+                nextFirefighters.add(ff);
+            }
+        }
+        firefighters = nextFirefighters;
         for (Firefighter f: firefighters) {
             environment.putObjectAt(f.getX(), f.getY(), f);
         }

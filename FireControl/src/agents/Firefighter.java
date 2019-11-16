@@ -26,6 +26,7 @@ public class Firefighter extends MyAgent {
 
     private static int VIEWING_DIST = 3;
     private static int EXTINGUISHING_DIST = 2;
+    private static int HEALTH_DAMAGE = 20;
 
     int speed;
     int health;
@@ -110,6 +111,10 @@ public class Firefighter extends MyAgent {
 
         while (i.hasNext())
             i.next().beExtinguished();
+    }
+
+    private void decreaseHealth() {
+        state.setHealth(state.getHealth() - HEALTH_DAMAGE);
     }
 
     public class MessageProcessingBehaviour extends Behaviour {
@@ -423,6 +428,10 @@ public class Firefighter extends MyAgent {
                     MapCell cell = MapState.getGridPos(cellX, cellY);
                     processCell(i, j, cell);
                 }
+            }
+            // Firefighter surrounded by fire
+            if (fires.size() >= Math.pow(VIEWING_DIST * 2 + 1, 2) / 2) {
+                decreaseHealth();
             }
         }
 
