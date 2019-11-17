@@ -4,10 +4,7 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import launchers.SimulationLauncher;
-import sajas.core.behaviours.Behaviour;
-import sajas.core.behaviours.CyclicBehaviour;
-import sajas.core.behaviours.ParallelBehaviour;
-import sajas.core.behaviours.TickerBehaviour;
+import sajas.core.behaviours.*;
 import uchicago.src.sim.gui.SimGraphics;
 import utils.MapState;
 
@@ -26,39 +23,35 @@ public class Firefighter extends MyAgent {
 
     private static int VIEWING_DIST = 3;
     private static int EXTINGUISHING_DIST = 2;
-    private static int HEALTH_DAMAGE = 20;
+    private static int HEALTH_DAMAGE = 5;
+    private static int MAX_WATER_CAPACITY = 100;
+    private static int PUMPING_VELOCITY = 5;
 
-    int speed;
-    int health;
     int water;
-    int maxCapacity;
-    int pumpingVelocity;
     int[] destination = new int[2];
-    int[] pos;
 
     private MapCell[][] perception;
     private HashSet<MapCell> fires;
     private HashSet<MapCell> firesToExtinguish;
 
     private List<MapCell> cells = new ArrayList<>();
-    private List<MapCell> ocuppiedCells = new ArrayList<>();
 
     private State currentState;
 
     private ParallelBehaviour behaviour;
 
-    MessageTemplate mtRequestFires;
-    MessageTemplate mtProposeCell;
+    private MessageTemplate mtRequestFires;
 
     public Firefighter(SimulationLauncher launcher, int x, int y) {
         super(launcher, x, y);
 
-        destination[0] = -1;
-        currentState = State.Waiting;
-
         perception = new MapCell[VIEWING_DIST * 2 + 1][VIEWING_DIST * 2 + 1];
         fires = new HashSet<>();
         firesToExtinguish = new HashSet<>();
+
+        destination[0] = -1;
+        water = MAX_WATER_CAPACITY;
+        currentState = State.Waiting;
 
         behaviour = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL) {
             public int onEnd() {
@@ -66,7 +59,8 @@ public class Firefighter extends MyAgent {
                 return 0;
             }
         };
-        behaviour.addSubBehaviour(new MessageProcessingBehaviour(this));
+        behaviour.addSubBehaviour(new ReceiveInitialFireBehaviour());
+        behaviour.addSubBehaviour(new SendPerceptionBehaviour());
         behaviour.addSubBehaviour(new PerceptionBehaviour(this, SimulationLauncher.FF_UPDATE_RATE));
         behaviour.addSubBehaviour(new MovingBehaviour(this, SimulationLauncher.FF_UPDATE_RATE));
         this.addBehaviour(behaviour);
@@ -106,29 +100,24 @@ public class Firefighter extends MyAgent {
     }
 
     private void extinguishFire() {
-        water -= 10;
         Iterator<MapCell> i = firesToExtinguish.iterator();
-
-        while (i.hasNext())
-            i.next().beExtinguished();
-    }
-
-    private void decreaseHealth() {
-        state.setHealth(state.getHealth() - HEALTH_DAMAGE);
-    }
-
-    public class MessageProcessingBehaviour extends Behaviour {
-        Firefighter ff;
-        int numReceivedMsg = 0;
-
-        public MessageProcessingBehaviour(Firefighter ff) {
-            this.ff = ff;
+        while (i.hasNext()) {
+            if (water >= 0) {
+                i.next().beExtinguished();
+                water -= 10;
+            } else {
+                behaviour.addSubBehaviour(new RequestWaterBehaviour());
+                currentState = State.Refilling;
+                break;
+            }
         }
+    }
 
+    public class ReceiveInitialFireBehaviour extends OneShotBehaviour {
         public void receiveInitialFire() {
             // Prepare the template to get proposals
             MessageTemplate mt = MessageTemplate.MatchConversationId("inform-fires");
-            ACLMessage firesMsg = myAgent.receive(mt);
+            ACLMessage firesMsg = receive(mt);
             // Fires inform message received
             if (firesMsg != null && firesMsg.getPerformative() == ACLMessage.INFORM) {
                 String posRegex = "(\\d+):(\\d+)";
@@ -138,42 +127,214 @@ public class Firefighter extends MyAgent {
                     int destX = Integer.valueOf(matcher.group(1));
                     int destY = Integer.valueOf(matcher.group(2));
                     setDestination(destX, destY);
+                    System.out.println(firesMsg);
                     currentState = State.Driving;
                 }
             } else {
                 block();
             }
         }
+        @Override
+        public void action() {
+            receiveInitialFire();
+        }
+    }
 
+    public class PerceptionBehaviour extends TickerBehaviour {
+
+        public PerceptionBehaviour(Firefighter ff, long period) {
+            super(ff, period);
+        }
+
+        public void updatePerception() {
+            clearFires();
+            for (int i = 0; i < VIEWING_DIST * 2 + 1; i++) {
+                for (int j = 0; j < VIEWING_DIST * 2 + 1; j++) {
+                    int cellX = state.getX() - VIEWING_DIST + i;
+                    int cellY = state.getY() - VIEWING_DIST + j;
+                    MapCell cell = MapState.getGridPos(cellX, cellY);
+                    processCell(i, j, cell);
+                }
+            }
+            // Firefighter surrounded by fire
+            if (fires.size() >= Math.pow(VIEWING_DIST * 2 + 1, 2) / 2) {
+                state.decreaseHealth(HEALTH_DAMAGE);
+            } else {
+                state.resetHealth();
+            }
+        }
+
+        public void clearFires() {
+            fires.clear();
+            firesToExtinguish.clear();
+        }
+
+        public void processCell(int i, int j, MapCell cell) {
+            perception[i][j] = cell;
+            if (cell != null && cell.isOnFire()) {
+                fires.add(cell);
+                if (MapState.calculateDist(cell, (Firefighter) myAgent) <= EXTINGUISHING_DIST) {
+                    firesToExtinguish.add(cell);
+                    currentState = State.Extinguishing;
+                }
+            }
+        }
+
+        @Override
+        protected void onTick() {
+            updatePerception();
+        }
+    }
+
+    public class SendPerceptionBehaviour extends CyclicBehaviour {
+        public void sendPerceptionFires() {
+            ACLMessage reqMsg = receive(mtRequestFires);
+            // Fires request message received
+            if (reqMsg != null && reqMsg.getPerformative() == ACLMessage.REQUEST) {
+                // Refuse own messages
+                if (reqMsg.getSender() == getAID()) {
+                    return;
+                }
+                ACLMessage reply = reqMsg.createReply();
+                reply.setPerformative(ACLMessage.INFORM);
+
+                String firesStr = "";
+                Iterator<MapCell> i = fires.iterator();
+                while (i.hasNext()) {
+                    MapCell cell = i.next();
+                    firesStr += String.format("%d:%d,", cell.getX(), cell.getY());
+                }
+                reply.setContent(firesStr);
+
+                send(reply);
+                System.out.println(reply);
+            } else {
+                block();
+            }
+        }
+        @Override
+        public void action() {
+            sendPerceptionFires();
+        }
+    }
+
+    public class MovingBehaviour extends TickerBehaviour {
+        int numSearchingTicks = 0;
+
+        public MovingBehaviour(Firefighter ff, long period) {
+            super(ff, period);
+        }
+
+        protected void onTick() {
+            switch(currentState) {
+                case Driving: {
+                    if (getX() == destination[0] && getY() == destination[1]) {
+                        behaviour.addSubBehaviour(new RequestNearestFireBehaviour());
+                    } else {
+                        move();
+                    }
+                    break;
+                }
+                case Searching: {
+                    if (numSearchingTicks == SimulationLauncher.NUM_ROAMING_TICKS) {
+                        setDestination(0,0);
+                        currentState = State.Return;
+                    } else {
+                        if (!fires.isEmpty()) {
+                            Iterator<MapCell> iter = fires.iterator();
+                            MapCell cell = iter.next();
+                            setDestination(cell.getX(), cell.getY());
+                            currentState = State.Driving;
+                            numSearchingTicks = 0;
+                        } else {
+                            Random rand = new Random();
+                            int x = rand.nextInt(MapState.envWidth);
+                            int y = rand.nextInt(MapState.envHeight);
+                            setDestination(x,y);
+                            numSearchingTicks++;
+                        }
+                        move();
+                    }
+                    break;
+                }
+                case Extinguishing: {
+                    if (firesToExtinguish.isEmpty()) {
+                        if (!fires.isEmpty()) {
+                            Iterator<MapCell> i = fires.iterator();
+                            MapCell cell = i.next();
+                            setDestination(cell.getX(),cell.getY());
+                            currentState = State.Driving;
+                        } else {
+                            behaviour.addSubBehaviour(new RequestNearestFireBehaviour());
+                        }
+                    } else {
+                        extinguishFire();
+                    }
+                    break;
+                }
+                case Refilling: {
+                    System.out.println("Refilling...");
+                    if (water == MAX_WATER_CAPACITY) {
+                        setDestination(0, 0);
+                        currentState = State.Driving;
+                    } else if (getX() == destination[0] && getY() == destination[1]) {
+                        if (water >= MAX_WATER_CAPACITY - PUMPING_VELOCITY)
+                            water = MAX_WATER_CAPACITY;
+                        else
+                            water += PUMPING_VELOCITY;
+                    } else {
+                        move();
+                        System.out.println("MOVING TOWARDS WATER!");
+                        System.out.println(getX() + "," + getY());
+                    }
+                    break;
+                }
+                case Return: {
+                    move();
+                    break;
+                }
+                default:
+                    return;
+            }
+        }
+    }
+
+    public class RequestNearestFireBehaviour extends OneShotBehaviour {
         public void requestNearestFire() {
             ACLMessage reqMsg = new ACLMessage(ACLMessage.REQUEST);
             for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
-                if (entry.getKey() != ff.getAID() && entry.getValue() instanceof Firefighter) {
+                if (entry.getKey() != getAID() && entry.getValue() instanceof Firefighter) {
                     AID firefighterAid = entry.getKey();
                     reqMsg.addReceiver(firefighterAid);
                 }
             }
             reqMsg.setConversationId("request-fires");
             reqMsg.setReplyWith("fire-req" + System.currentTimeMillis());
-            ff.send(reqMsg);
+            send(reqMsg);
+            System.out.println(reqMsg);
 
             mtRequestFires =  MessageTemplate.and(MessageTemplate.MatchConversationId("request-fires"),
                     MessageTemplate.MatchInReplyTo(reqMsg.getReplyWith()));
 
-            System.out.println(reqMsg);
-
-            handleFiresAnswer();
+            behaviour.addSubBehaviour(new ReceiveNearestFireBehaviour());
         }
 
+        @Override
+        public void action() {
+            requestNearestFire();
+        }
+    }
+
+    public class ReceiveNearestFireBehaviour extends CyclicBehaviour {
+        int numReceivedMsg = 0;
+
         public void handleFiresAnswer() {
-            ACLMessage replyMsg = ff.receive(mtRequestFires);
+            ACLMessage replyMsg = receive(mtRequestFires);
             if (replyMsg != null && replyMsg.getPerformative() == ACLMessage.INFORM) {
                 String fireRegex = "(\\d+):(\\d+),?";
                 Pattern pattern = Pattern.compile(fireRegex);
                 Matcher matcher = pattern.matcher(replyMsg.getContent());
-                if (matcher.matches()) {
-                    System.out.println(replyMsg);
-                }
+                System.out.println(replyMsg);
                 while (matcher.find()) {
                     int fireX = Integer.valueOf(matcher.group(1));
                     int fireY = Integer.valueOf(matcher.group(2));
@@ -196,264 +357,70 @@ public class Firefighter extends MyAgent {
                         .collect(Collectors.toList());
                 int minDistCellIndex = cellDists.indexOf(Collections.min(cellDists));
                 setDestination(cells.get(minDistCellIndex).getX(), cells.get(minDistCellIndex).getY());
+                move();
             } else {
                 currentState = State.Searching;
             }
         }
 
-        public void sendPerceptionFires() {
-            ACLMessage reqMsg = ff.receive(mtRequestFires);
-            // Fires request message received
-            if (reqMsg != null && reqMsg.getPerformative() == ACLMessage.REQUEST) {
-                // Refuse own messages
-                if (reqMsg.getSender() == getAID()) {
-                    return;
-                }
-                ACLMessage reply = reqMsg.createReply();
-                reply.setPerformative(ACLMessage.INFORM);
+        @Override
+        public void action() {
+            handleFiresAnswer();
+        }
+    }
 
-                String firesStr = "";
-                Iterator<MapCell> i = fires.iterator();
-                while (i.hasNext()) {
-                    MapCell cell = i.next();
-                    firesStr += String.format("%d:%d,", cell.getX(), cell.getY());
-                }
-                reply.setContent(firesStr);
-
-                ff.send(reply);
-            } else {
-                block();
-            }
+    public class RequestWaterBehaviour extends OneShotBehaviour {
+        private void sendWaterRequest() {
+            ACLMessage reqMsg = new ACLMessage(ACLMessage.REQUEST);
+            reqMsg.addReceiver(getEnvironment().getFirestationAID());
+            reqMsg.setConversationId("request-water");
+            send(reqMsg);
+            behaviour.addSubBehaviour(new WaitWaterRequestBehaviour());
         }
 
         @Override
         public void action() {
-            switch (currentState) {
-                case Waiting: {
-                    receiveInitialFire();
-                    break;
-                }
-                case Driving: {
-                    /*if(!fires.isEmpty() && firesToExtinguish.isEmpty()) {
-                        // Ask for a non-occupied cell
-                        cellCallForProposal();
-                    }
-                    if(destination[0] == state.getX() && destination[1] == state.getY()) {
-                        requestNearestFire();
-                    }*/
-                    break;
-                }
-                case Extinguishing: {
-                    if(fires.isEmpty() && destination[0] == state.getX() && destination[1] == state.getY()){
-                        System.out.println("FIRES EMPTY!");
-                        requestNearestFire();
-                        currentState = State.Driving;
-                    }
-                    break;
-                }
-            }
-        }
-
-        @Override
-        public boolean done() {
-            return currentState == State.Return;
+            sendWaterRequest();
         }
     }
 
-    public class MovingBehaviour extends TickerBehaviour {
-        Firefighter ff;
-        int numSearchingTicks = 0;
-        int numReceivedMsg = 0;
+    public class WaitWaterRequestBehaviour extends OneShotBehaviour {
+        private List<MapCell> waterCells;
 
-        public MovingBehaviour(Firefighter ff, long period) {
-            super(ff, period);
-            this.ff = ff;
+        public WaitWaterRequestBehaviour() {
+            waterCells = new ArrayList<>();
         }
 
-        public void handleMove() {
-            requestOcuppiedCells();
-            handleOcuppiedCells();
-            if (numReceivedMsg == getEnvironment().getFirefighters().size() - 1) {
-                sendNextCell();
-                numReceivedMsg = 0;
-            }
-        }
-
-        public void requestOcuppiedCells() {
-            ACLMessage reqMsg = new ACLMessage(ACLMessage.REQUEST);
-            for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
-                if (entry.getKey() != ff.getAID() && entry.getValue() instanceof Firefighter) {
-                    AID firefighterAid = entry.getKey();
-                    reqMsg.addReceiver(firefighterAid);
+        private void handleWaterAnswer() {
+            MessageTemplate mt = MessageTemplate.MatchConversationId("request-water");
+            ACLMessage waterMsg = receive(mt);
+            // Water inform message received
+            if (waterMsg != null && waterMsg.getPerformative() == ACLMessage.INFORM) {
+                String posRegex = "(\\d+):(\\d+),?";
+                Pattern pattern = Pattern.compile(posRegex);
+                Matcher matcher = pattern.matcher(waterMsg.getContent());
+                while (matcher.find()) {
+                    int waterX = Integer.valueOf(matcher.group(1));
+                    int waterY = Integer.valueOf(matcher.group(2));
+                    waterCells.add(new MapCell(waterX,waterY));
                 }
-            }
-            reqMsg.setConversationId("cell-request");
-            reqMsg.setReplyWith("cell-req" + System.currentTimeMillis());
-
-            ff.send(reqMsg);
-
-            // Prepare the template to get proposals
-            mtProposeCell = MessageTemplate.and(MessageTemplate.MatchConversationId("cell-request"),
-                    MessageTemplate.MatchInReplyTo(reqMsg.getReplyWith()));
-
-            System.out.println(reqMsg);
-
-            handleOcuppiedCells();
-        }
-
-        public void handleOcuppiedCells() {
-            ACLMessage replyMsg = ff.receive(mtProposeCell);
-            if (replyMsg != null && replyMsg.getPerformative() == ACLMessage.REQUEST) {
-                String fireRegex = "(\\d+):(\\d+)";
-                Pattern pattern = Pattern.compile(fireRegex);
-                Matcher matcher = pattern.matcher(replyMsg.getContent());
-                if (matcher.matches()) {
-                    int cellX = Integer.valueOf(matcher.group(1));
-                    int cellY = Integer.valueOf(matcher.group(2));
-                    ocuppiedCells.add(new MapCell(cellX,cellY));
-                }
+                setWaterDestination();
             } else {
                 block();
             }
-            numReceivedMsg++;
         }
 
-        public void sendNextCell() {
-            ACLMessage reply = new ACLMessage(ACLMessage.REQUEST);
-            List<MapCell> availableCells = cells.stream()
-                    .filter(not(ocuppiedCells::contains))
+        private void setWaterDestination() {
+            List<Integer> cellDists = waterCells.stream()
+                    .map(c -> MapState.calculateDist(c, (Firefighter) myAgent))
                     .collect(Collectors.toList());
-            Random rand = new Random();
-            MapCell nextCell = availableCells.get(rand.nextInt(availableCells.size()));
-            reply.setPerformative(ACLMessage.INFORM);
-            for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
-                if (entry.getKey() != ff.getAID() && entry.getValue() instanceof Firefighter) {
-                    AID firefighterAid = entry.getKey();
-                    reply.addReceiver(firefighterAid);
-                }
-            }
-            String posStr = String.format("%d:%d,", nextCell.getX(), nextCell.getY());
-            reply.setContent(posStr);
-            ff.send(reply);
-
-            setDestination(nextCell.getX(),nextCell.getY());
-        }
-
-        protected void onTick() {
-            switch(currentState) {
-                case Driving: {
-                    /*if(!fires.isEmpty() && firesToExtinguish.isEmpty()) {
-                        Iterator<MapCell> i = fires.iterator();
-                        MapCell cell = i.next();
-                        destination[0] = cell.getX();
-                        destination[1] = cell.getY();
-                    }*/
-                    handleMove();
-                    move();
-                    break;
-                }
-                case Searching: {
-                    if (numSearchingTicks == SimulationLauncher.NUM_ROAMING_TICKS) {
-                        System.out.println(getName() + "is GOING TO THE BASE!");
-                        setDestination(0,0);
-                        currentState = State.Return;
-                    } else if (!fires.isEmpty()) {
-                        numSearchingTicks = 0;
-                        currentState = State.Driving;
-                    } else {
-                        Random rand = new Random();
-                        int x = rand.nextInt(MapState.envWidth);
-                        int y = rand.nextInt(MapState.envHeight);
-                        setDestination(x,y);
-                        numSearchingTicks++;
-                        System.out.println(getName() + " is ROAMING BOIIII");
-                    }
-                    break;
-                }
-                case Extinguishing: {
-                    if(!fires.isEmpty() && firesToExtinguish.isEmpty()) {
-                        Iterator<MapCell> i = fires.iterator();
-                        MapCell cell = i.next();
-                        destination[0] = cell.getX();
-                        destination[1] = cell.getY();
-                        currentState = State.Driving;
-                    } else {
-                        Iterator<MapCell> i = firesToExtinguish.iterator();
-                        while (i.hasNext())
-                            i.next().beExtinguished();
-                        currentState = State.Driving;
-                    }
-                    break;
-                }
-                case Refilling: {
-                    if (water == maxCapacity) {
-                        currentState = State.Driving;
-                        setDestination(-1, -1);
-                        return;
-                    } else if (pos == destination) {
-                        if (water >= maxCapacity - pumpingVelocity)
-                            water = maxCapacity;
-                        else
-                            water += pumpingVelocity;
-                        return;
-                    } else {
-                        move();
-                    }
-                    break;
-                }
-                case Return: {
-                    move();
-                    break;
-                }
-                default:
-                    return;
-            }
-        }
-    }
-
-    public class PerceptionBehaviour extends TickerBehaviour {
-        Firefighter ff;
-
-        public PerceptionBehaviour(Firefighter ff, long period) {
-            super(ff, period);
-            this.ff = ff;
-        }
-
-        public void updatePerception() {
-            clearFires();
-            for (int i = 0; i < VIEWING_DIST * 2 + 1; i++) {
-                for (int j = 0; j < VIEWING_DIST * 2 + 1; j++) {
-                    int cellX = state.getX() - VIEWING_DIST + i;
-                    int cellY = state.getY() - VIEWING_DIST + j;
-                    MapCell cell = MapState.getGridPos(cellX, cellY);
-                    processCell(i, j, cell);
-                }
-            }
-            // Firefighter surrounded by fire
-            if (fires.size() >= Math.pow(VIEWING_DIST * 2 + 1, 2) / 2) {
-                decreaseHealth();
-            }
-        }
-
-        public void clearFires() {
-            fires.clear();
-            firesToExtinguish.clear();
-        }
-
-        public void processCell(int i, int j, MapCell cell) {
-            perception[i][j] = cell;
-            if (cell != null && cell.isOnFire()) {
-                fires.add(cell);
-                if (MapState.calculateDist(cell, ff) <= EXTINGUISHING_DIST) {
-                    firesToExtinguish.add(cell);
-                    currentState = State.Extinguishing;
-                }
-            }
+            int minDistCellIndex = cellDists.indexOf(Collections.min(cellDists));
+            setDestination(waterCells.get(minDistCellIndex).getX(), waterCells.get(minDistCellIndex).getY());
         }
 
         @Override
-        protected void onTick() {
-            updatePerception();
+        public void action() {
+            handleWaterAnswer();
         }
     }
 }

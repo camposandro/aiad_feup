@@ -92,7 +92,7 @@ public class MapCell implements Drawable, Serializable  {
         if (soilType != 3 && soilType != 1 && random <= probOfFire) {
             this.onFire = true;
             setColor(this.calcColor());
-            MapState.getFirecells().add(this);
+            MapState.getFireCells().add(this);
         }
     }
 
@@ -162,7 +162,7 @@ public class MapCell implements Drawable, Serializable  {
 
     protected void beExtinguished() {
         propsCoefficient += 2;
-        //this.burningRate -= 40;
+        this.burningRate -= 40;
         if (this.burningRate <= 0) {
             this.setOnFire(false);
             this.probOfFire = 0;

@@ -18,6 +18,8 @@ public class MapState {
     private static List<MapCell> fires = new ArrayList<>();
 
     private static HashSet<MapCell> fireCell = new HashSet<>();
+    private static HashSet<MapCell> waterCell = new HashSet<>();
+
     public static MapCell fireCell1;
 
     final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -45,7 +47,7 @@ public class MapState {
         service.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                HashSet<MapCell> fireCells = MapState.getFirecells();
+                HashSet<MapCell> fireCells = MapState.getFireCells();
                 HashSet<MapCell> a = (HashSet) fireCells.clone();
                 Iterator<MapCell> i = a.iterator();
                 while (i.hasNext())
@@ -68,8 +70,12 @@ public class MapState {
         this.grid = grid;
     }
 
-    public static HashSet<MapCell> getFirecells() {
+    public static HashSet<MapCell> getFireCells() {
         return fireCell;
+    }
+
+    public static HashSet<MapCell> getWaterCells() {
+        return waterCell;
     }
 
     public MapCell[][] createMapState(SimulationLauncher launcher, int width, int length) {
@@ -194,6 +200,14 @@ public class MapState {
 
         //Generate Water bodies
         mapCell = generateWaterBodies(mapCell);
+        for (int i = 0; i < envWidth; i++) {
+            for (int j = 0; j < envHeight; j++) {
+                MapCell cell = mapCell[i][j];
+                if (cell.getSoilType() == 3) {
+                    waterCell.add(cell);
+                }
+            }
+        }
 
         //Generate Houses
         mapCell = generateHousesAndRoads(mapCell);

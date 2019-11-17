@@ -16,6 +16,14 @@ public class AgentState {
         setHealth(100);
     }
 
+    public void decreaseHealth(int damage) {
+        setHealth(health - damage);
+    }
+
+    public void resetHealth() {
+        setHealth(100);
+    }
+
     public int getX() {
         return x;
     }
