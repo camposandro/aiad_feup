@@ -64,7 +64,10 @@ public class Firefighter extends MyAgent {
 
     @Override
     public void draw(SimGraphics simGraphics) {
-        simGraphics.drawHollowFastOval(Color.BLACK);
+        if(state.getHealth() <= 0)
+            simGraphics.drawFastOval(Color.BLACK);
+        else
+            simGraphics.drawHollowFastOval(Color.BLACK);
     }
 
     private void setDestination(int x, int y) {
@@ -324,7 +327,7 @@ public class Firefighter extends MyAgent {
             System.out.println("State: " + currentState.toString());
             switch(currentState) {
                 case Driving: {
-                    if (fires.isEmpty() && arrived()) {
+                    if (fires.isEmpty()) {
                         requestNearestFire();
                     } else {
                         move();
@@ -342,7 +345,7 @@ public class Firefighter extends MyAgent {
                             setDestination(cell.getX(), cell.getY());
                             currentState = State.Driving;
                             numSearchingTurns = 0;
-                        } else {
+                        } else if(arrived()) {
                             Random rand = new Random();
                             int x = rand.nextInt(MapState.envWidth);
                             int y = rand.nextInt(MapState.envHeight);

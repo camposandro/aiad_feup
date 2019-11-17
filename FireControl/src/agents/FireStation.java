@@ -49,7 +49,10 @@ public class FireStation extends MyAgent {
             MapCell currentCell = fireCells.get(0);
             for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
                 if (entry.getValue() instanceof Firefighter) {
+                    currentCell = fireCells.get(firesIdx);
+
                     AID firefighterAid = entry.getKey();
+                    informMsg.clearAllReceiver();
                     informMsg.addReceiver(firefighterAid);
                     informMsg.setConversationId("inform-fires");
 
@@ -58,13 +61,9 @@ public class FireStation extends MyAgent {
                     System.out.println("FF: " + currentCell.getX() + "," + currentCell.getY());
                     informMsg.setContent(dest);
                     send(informMsg);
-
-                    if (i > SimulationLauncher.NUM_FIREFIGHTERS / fireCells.size()) {
-                        i = 0;
-                        firesIdx++;
-                        currentCell = fireCells.get(firesIdx);
-                    }
-                    i++;
+                    if(fireCells.size() - 1 == firesIdx)
+                        firesIdx = -1;
+                    firesIdx++;
                 }
             }
         }
