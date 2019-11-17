@@ -167,7 +167,6 @@ public class Firefighter extends MyAgent {
             int minDistCellIndex = cellDists.indexOf(Collections.min(cellDists));
             setLastFireDest(getX(),getY());
             setDestination(waterCells.get(minDistCellIndex).getX(), waterCells.get(minDistCellIndex).getY());
-            System.out.println("Destination of " + destination[0] + "," + destination[1]);
             currentState = State.Refilling;
         }
     }
@@ -249,14 +248,14 @@ public class Firefighter extends MyAgent {
         public void action() {
             ACLMessage msg = receive();
             if (msg != null) {
-                System.out.println(msg);
+                //System.out.println(msg);
                 switch (msg.getConversationId()) {
                     case "inform-fires":
                         receiveInitialFire(msg);
                         break;
                     case "request-fires":
-                        sendPerceptionFires(msg);
-                        handleFiresAnswer(msg);
+                        //sendPerceptionFires(msg);
+                        //handleFiresAnswer(msg);
                         break;
                     case "request-water":
                         handleWaterAnswer(msg);
@@ -324,7 +323,7 @@ public class Firefighter extends MyAgent {
         }
 
         protected void onTick() {
-            System.out.println("State: " + currentState.toString());
+            System.out.println("[" + getX() + "," + getY() + "] is in state " + currentState.toString());
             switch(currentState) {
                 case Driving: {
                     if (fires.isEmpty()) {
@@ -360,8 +359,14 @@ public class Firefighter extends MyAgent {
                 case Extinguishing: {
                     if (firesToExtinguish.isEmpty()) {
                         if (!fires.isEmpty()) {
+                            Random rand = new Random();
+                            int fireIdx = rand.nextInt(fires.size()) - 1;
                             Iterator<MapCell> i = fires.iterator();
                             MapCell cell = i.next();
+                            while (fireIdx > 0) {
+                                cell = i.next();
+                                fireIdx--;
+                            }
                             setDestination(cell.getX(),cell.getY());
                             currentState = State.Driving;
                         } else {

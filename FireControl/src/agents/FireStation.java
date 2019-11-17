@@ -45,8 +45,8 @@ public class FireStation extends MyAgent {
                 fireCells.add(iter.next());
             }
 
-            int i = 0, firesIdx = 0;
-            MapCell currentCell = fireCells.get(0);
+            int firesIdx = 0;
+            MapCell currentCell;
             for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
                 if (entry.getValue() instanceof Firefighter) {
                     currentCell = fireCells.get(firesIdx);
@@ -57,12 +57,12 @@ public class FireStation extends MyAgent {
                     informMsg.setConversationId("inform-fires");
 
                     String dest = String.format("%d:%d", currentCell.getX(), currentCell.getY());
-                    //String dest = String.format("%d:%d", currentCell.getX() - getEnvironment().getFirefighters().size() / 2 + 2 * i, currentCell.getY() - getEnvironment().getFirefighters().size() / 2  + 2 * i);
-                    System.out.println("FF: " + currentCell.getX() + "," + currentCell.getY());
                     informMsg.setContent(dest);
                     send(informMsg);
-                    if(fireCells.size() - 1 == firesIdx)
+
+                    if (fireCells.size() - 1 == firesIdx) {
                         firesIdx = -1;
+                    }
                     firesIdx++;
                 }
             }
