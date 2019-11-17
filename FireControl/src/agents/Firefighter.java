@@ -10,6 +10,9 @@ import utils.MapState;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -22,7 +25,8 @@ public class Firefighter extends MyAgent {
     private static int EXTINGUISHING_DIST = 2;
     private static int HEALTH_DAMAGE = 5;
     private static int MAX_WATER_CAPACITY = 100;
-    private static int PUMPING_VELOCITY = 5;
+    private static int EXTINGUISH_PUMPING_VELOCITY = 2;
+    private static int REFILL_PUMPING_VELOCITY = EXTINGUISH_PUMPING_VELOCITY * 3;
 
     int water;
     int[] destination = new int[2];
@@ -36,6 +40,8 @@ public class Firefighter extends MyAgent {
     private List<MapCell> waterCells = new ArrayList<>();
 
     private State currentState;
+
+    //private final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
     private ParallelBehaviour behaviour;
 
@@ -114,11 +120,14 @@ public class Firefighter extends MyAgent {
     }
 
     private void extinguishFire() {
+        boolean worldHasWater = MapState.getWaterCells().size() > 0;
         Iterator<MapCell> i = firesToExtinguish.iterator();
         while (i.hasNext()) {
             if (water >= 0) {
                 i.next().beExtinguished();
-                water -= 1;
+                if (worldHasWater) {
+                    water -= EXTINGUISH_PUMPING_VELOCITY / firesToExtinguish.size();
+                }
             } else {
                 requestNearestWater();
                 break;
@@ -135,8 +144,17 @@ public class Firefighter extends MyAgent {
             }
         }
         reqMsg.setConversationId("request-fires");
-        reqMsg.setReplyWith("fire-req" + System.currentTimeMillis());
         send(reqMsg);
+
+        /* Schedule world update
+        service.schedule(new Runnable() {
+            @Override
+            public void run() {
+                if (fireCells.isEmpty()) {
+                    currentState = State.Searching;
+                }
+            }
+        }, 2, TimeUnit.SECONDS);*/
     }
 
     private void calcFireDestination() {
@@ -146,7 +164,7 @@ public class Firefighter extends MyAgent {
                     .collect(Collectors.toList());
             int minDistCellIndex = cellDists.indexOf(Collections.min(cellDists));
             setDestination(fireCells.get(minDistCellIndex).getX(), fireCells.get(minDistCellIndex).getY());
-            move();
+            currentState = State.Driving;
         } else {
             currentState = State.Searching;
         }
@@ -223,7 +241,7 @@ public class Firefighter extends MyAgent {
                 }
             }
             numReceivedMsg++;
-            if (numReceivedMsg == getEnvironment().getFirefighters().size() - 1) {
+            if (numReceivedMsg >= getEnvironment().getFirefighters().size() / 2) {
                 calcFireDestination();
                 numReceivedMsg = 0;
             }
@@ -248,14 +266,16 @@ public class Firefighter extends MyAgent {
         public void action() {
             ACLMessage msg = receive();
             if (msg != null) {
-                //System.out.println(msg);
                 switch (msg.getConversationId()) {
                     case "inform-fires":
                         receiveInitialFire(msg);
                         break;
                     case "request-fires":
-                        //sendPerceptionFires(msg);
-                        //handleFiresAnswer(msg);
+                        if (msg.getPerformative() == ACLMessage.REQUEST) {
+                            sendPerceptionFires(msg);
+                        } else if (msg.getPerformative() == ACLMessage.INFORM) {
+                            handleFiresAnswer(msg);
+                        }
                         break;
                     case "request-water":
                         handleWaterAnswer(msg);
@@ -323,26 +343,26 @@ public class Firefighter extends MyAgent {
         }
 
         protected void onTick() {
-            System.out.println("[" + getX() + "," + getY() + "] is in state " + currentState.toString());
+            System.out.println(currentState);
             switch(currentState) {
                 case Driving: {
                     if (fires.isEmpty()) {
                         requestNearestFire();
-                    } else {
                         move();
+                    } else if (!arrived()) {
+                        move();
+                    } else {
+                        currentState = State.Searching;
                     }
                     break;
                 }
                 case Searching: {
-                    if (numSearchingTurns == SimulationLauncher.NUM_ROAMING_TICKS) {
+                    if (numSearchingTurns == SimulationLauncher.NUM_ROAMING_TURNS) {
                         setDestination(0,0);
                         currentState = State.Return;
                     } else {
                         if (!fires.isEmpty()) {
-                            Iterator<MapCell> iter = fires.iterator();
-                            MapCell cell = iter.next();
-                            setDestination(cell.getX(), cell.getY());
-                            currentState = State.Driving;
+                            currentState = State.Extinguishing;
                             numSearchingTurns = 0;
                         } else if(arrived()) {
                             Random rand = new Random();
@@ -382,10 +402,10 @@ public class Firefighter extends MyAgent {
                         setDestination(lastFireDest);
                         currentState = State.Driving;
                     } else if (arrived()) {
-                        if (water >= MAX_WATER_CAPACITY - PUMPING_VELOCITY)
+                        if (water >= MAX_WATER_CAPACITY - REFILL_PUMPING_VELOCITY)
                             water = MAX_WATER_CAPACITY;
                         else
-                            water += PUMPING_VELOCITY;
+                            water += REFILL_PUMPING_VELOCITY;
                     } else {
                         move();
                     }

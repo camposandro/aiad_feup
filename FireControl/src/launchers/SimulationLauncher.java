@@ -24,10 +24,10 @@ public class SimulationLauncher extends Repast3Launcher {
 
     // World update fixed rate
     public static int WORLD_UPDATE_RATE = 2000;
-    public static int FF_UPDATE_RATE = 100;
+    public static int FF_UPDATE_RATE = 200;
     public static int MAX_NUM_FIRES = 5;
-    public static int NUM_FIREFIGHTERS = 2;
-    public static int NUM_ROAMING_TICKS = 100;
+    public static int NUM_FIREFIGHTERS = 5;
+    public static int NUM_ROAMING_TURNS = 3;
 
     // Minimum size             = 150x75
     // Recommended size         = 200x100

@@ -10,25 +10,31 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class MapCell implements Drawable, Serializable  {
 
+    private static int EXTINGUISHING_RATE = 50;
+    private static int CELL_BURNING_COEFFICIENT = 6;
+    private static int CELL_BURNING_COEFFICIENT_RATE = 4;
+
+    public enum SoilType { VEGETATION, ASPHALT, DIRT, WATER, HOUSE, CENTRAL_SQUARE};
+
     private int x;
     private int y;
     private boolean isPrioritary;
     private int vegetationDensity;
     private int humidityPercentage;
     private int burnedPercentage;
+    private SoilType soilType;
     private int probOfFire;
     private boolean onFire = false;
     private int burningRate = 0;
-    private int soilType; //0 - vegetation, 1 - asphalt, 2 - dirt, 3 - water, 4 - house
     private Color color;
-    private int propsCoefficient = 6;
+    private int burningCoefficient = CELL_BURNING_COEFFICIENT;
 
     public MapCell(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
-    public MapCell(int x, int y, int vegetationDensity, int humidityPercentage, int soilType) {
+    public MapCell(int x, int y, int vegetationDensity, int humidityPercentage, SoilType soilType) {
         setX(x);
         setY(y);
         setIsPrioritary(false);
@@ -41,8 +47,12 @@ public class MapCell implements Drawable, Serializable  {
         setProbOfFire( humidityPercentage + (100 - vegetationDensity));
     }
 
+    public boolean isMoveable() {
+        return this.soilType != SoilType.HOUSE && this.soilType != SoilType.CENTRAL_SQUARE && !this.onFire;
+    }
+
     protected void setProbOfFire(int densitySum){
-        this.probOfFire = densitySum / propsCoefficient;
+        this.probOfFire = densitySum / burningCoefficient;
     }
 
     private Color calcColor() {
@@ -54,15 +64,15 @@ public class MapCell implements Drawable, Serializable  {
             v = 1 - (burnedPercentage * 0.75f * 0.01f);
             a = Color.getHSBColor(h, s, v);
         }
-        else if (soilType == 1) { //asphalt
+        else if (soilType == SoilType.ASPHALT) { //asphalt
             a = new Color(60, 60, 60);
-        } else if (soilType == 2) { //dirt
+        } else if (soilType == SoilType.DIRT) { //dirt
             a = new Color(230, 182, 115);
-        } else if (soilType == 3) { //watter
+        } else if (soilType == SoilType.WATER) { //watter
             a = new Color(147, 176, 204);
-        } else if (soilType == 4) { //houses
+        } else if (soilType == SoilType.HOUSE) { //houses
             a = new Color(140, 45, 25);
-        } else if (soilType == 5) { //centralSquare
+        } else if (soilType == SoilType.CENTRAL_SQUARE) { //centralSquare
             a = new Color(200, 200, 200);
         } else {
             h = humidityPercentage * 100 / 360 * 0.003f + 0.15f;
@@ -89,7 +99,7 @@ public class MapCell implements Drawable, Serializable  {
         if (burnedPercentage == 100) {
             return;
         }
-        if (soilType != 3 && soilType != 1 && random <= probOfFire) {
+        if (soilType != SoilType.WATER && soilType != SoilType.ASPHALT && random <= probOfFire) {
             this.onFire = true;
             setColor(this.calcColor());
             MapState.getFireCells().add(this);
@@ -132,13 +142,13 @@ public class MapCell implements Drawable, Serializable  {
         setColor(this.calcColor());
     }
 
-    public void setSoilType(int soilType) {
+    public void setSoilType(SoilType soilType) {
         this.soilType = soilType;
         setColor(this.calcColor());
     }
 
-    public int getSoilType(){
-        return this.soilType;
+    public SoilType getSoilType(){
+        return soilType;
     }
 
     public int getBurnedPercentage() {
@@ -161,8 +171,8 @@ public class MapCell implements Drawable, Serializable  {
     }
 
     protected void beExtinguished() {
-        propsCoefficient += 2;
-        this.burningRate -= 40;
+        burningCoefficient += CELL_BURNING_COEFFICIENT_RATE;
+        this.burningRate -= EXTINGUISHING_RATE;
         if (this.burningRate <= 0) {
             this.setOnFire(false);
             this.probOfFire = 0;
