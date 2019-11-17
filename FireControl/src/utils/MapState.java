@@ -1264,6 +1264,8 @@ public class MapState {
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
     }
 
+    public static int calculateDist(MapCell c1, MapCell c2) { return Math.abs(c1.getX() - c2.getX()) + Math.abs(c1.getY() - c2.getY()); }
+
     public static int calculateDist(MapCell cell, Firefighter ff) {
         return Math.abs(cell.getX() - ff.getX()) + Math.abs(cell.getY() - ff.getY());
     }

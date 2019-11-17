@@ -109,14 +109,35 @@ public class Firefighter extends MyAgent {
     }
 
     private void move() {
-        if (state.getX() < destination[0])
+        List<MapCell> cells = new ArrayList<>();
+        cells.add(MapState.getGridPos(state.getX() + 1, state.getY() + 1));
+        cells.add(MapState.getGridPos(state.getX(), state.getY() + 1));
+        cells.add(MapState.getGridPos(state.getX() - 1, state.getY() + 1));
+        cells.add(MapState.getGridPos(state.getX() - 1, state.getY()));
+        cells.add(MapState.getGridPos(state.getX() - 1, state.getY() - 1));
+        cells.add(MapState.getGridPos(state.getX() + 1, state.getY() - 1));
+        cells.removeIf(c -> c == null || !c.isMoveable());
+
+        MapCell destCell = MapState.getGridPos(destination[0],destination[1]);
+        List<Integer> cellDists = cells.stream()
+                .map(c -> MapState.calculateDist(c, destCell))
+                .collect(Collectors.toList());
+        int minDistCellIndex = cellDists.indexOf(Collections.min(cellDists));
+
+        MapCell nextPos = cells.get(minDistCellIndex);
+        setX(nextPos.getX());
+        setY(nextPos.getY());
+        System.out.println("pos = " + getX() + "," + getY());
+        System.out.println("dest = " + destination[0] + "," + destination[1]);
+
+        /*if (state.getX() < destination[0])
             setX(state.getX() + 1);
         else if (state.getX() > destination[0])
             setX(state.getX() - 1);
         if (state.getY() < destination[1])
             setY(state.getY() + 1);
         else if (state.getY() > destination[1])
-            setY(state.getY() - 1);
+            setY(state.getY() - 1);*/
     }
 
     private void extinguishFire() {
