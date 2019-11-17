@@ -11,6 +11,8 @@ import uchicago.src.sim.gui.SimGraphics;
 import utils.MapState;
 
 import java.awt.*;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -36,24 +38,39 @@ public class FireStation extends MyAgent {
         @Override
         public void action() {
             ACLMessage informMsg = new ACLMessage(ACLMessage.INFORM);
-            int i = 0;
+
+            List<MapCell> fireCells = new ArrayList<>();
+            Iterator<MapCell> iter = MapState.getFireCells().iterator();
+            while (iter.hasNext()) {
+                fireCells.add(iter.next());
+            }
+
+            int i = 0, firesIdx = 0;
+            MapCell currentCell = fireCells.get(0);
             for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
                 if (entry.getValue() instanceof Firefighter) {
                     AID firefighterAid = entry.getKey();
                     informMsg.addReceiver(firefighterAid);
                     informMsg.setConversationId("inform-fires");
-                    MapCell a = MapState.fireCell1;
-                    String dest = String.format("%d:%d", a.getX() - getEnvironment().getFirefighters().size() / 2 + 2 * i, a.getY() - getEnvironment().getFirefighters().size() / 2  + 2 * i);
+
+                    String dest = String.format("%d:%d", currentCell.getX(), currentCell.getY());
+                    //String dest = String.format("%d:%d", currentCell.getX() - getEnvironment().getFirefighters().size() / 2 + 2 * i, currentCell.getY() - getEnvironment().getFirefighters().size() / 2  + 2 * i);
+                    System.out.println("FF: " + currentCell.getX() + "," + currentCell.getY());
                     informMsg.setContent(dest);
                     send(informMsg);
+
+                    if (i > SimulationLauncher.NUM_FIREFIGHTERS / fireCells.size()) {
+                        i = 0;
+                        firesIdx++;
+                        currentCell = fireCells.get(firesIdx);
+                    }
+                    i++;
                 }
-                i++;
             }
         }
     }
 
     public class HandleWaterRequests extends CyclicBehaviour {
-
         private void handleWaterRequests() {
             MessageTemplate mtWaterRequest = MessageTemplate.MatchConversationId("request-water");
             ACLMessage reqMsg = receive(mtWaterRequest);
