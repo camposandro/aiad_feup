@@ -25,10 +25,10 @@ public class SimulationLauncher extends Repast3Launcher {
     public static int WORLD_WIDTH = 200;        // Recommended size = 200
     public static int WORLD_HEIGHT = 100;       // Recommended size = 100
 
+    public static boolean RANDOMWORLD = false;
+
     public static int MAX_NUM_FIRES = 5;
     public static int NUM_FIREFIGHTERS = 7;
-
-    public static boolean RANDOMWORLD = false;
 
     public static int NUM_RIVERS = 1;
     public static int RIVER_MAX_WIDTH = 5;
