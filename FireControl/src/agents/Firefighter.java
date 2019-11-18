@@ -25,7 +25,7 @@ public class Firefighter extends MyAgent {
     private static int EXTINGUISHING_DIST = 2;
     private static int HEALTH_DAMAGE = 5;
     private static int MAX_WATER_CAPACITY = 100;
-    private static int EXTINGUISH_PUMPING_VELOCITY = 2;
+    private static int EXTINGUISH_PUMPING_VELOCITY = 4;
     private static int REFILL_PUMPING_VELOCITY = EXTINGUISH_PUMPING_VELOCITY * 3;
 
     int water;
@@ -109,6 +109,7 @@ public class Firefighter extends MyAgent {
     }
 
     private void move() {
+/*
         List<MapCell> cells = new ArrayList<>();
         cells.add(MapState.getGridPos(state.getX() + 1, state.getY() + 1));
         cells.add(MapState.getGridPos(state.getX(), state.getY() + 1));
@@ -128,15 +129,17 @@ public class Firefighter extends MyAgent {
             setX(nextPos.getX());
             setY(nextPos.getY());
         }
-
-        /*if (state.getX() < destination[0])
+*/
+        if (state.getX() < destination[0])
             setX(state.getX() + 1);
         else if (state.getX() > destination[0])
             setX(state.getX() - 1);
         if (state.getY() < destination[1])
             setY(state.getY() + 1);
         else if (state.getY() > destination[1])
-            setY(state.getY() - 1);*/
+            setY(state.getY() - 1);
+
+
     }
 
     private void extinguishFire() {
@@ -156,6 +159,7 @@ public class Firefighter extends MyAgent {
     }
 
     private void requestNearestFire() {
+        fireCells.clear();
         ACLMessage reqMsg = new ACLMessage(ACLMessage.REQUEST);
         for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
             if (entry.getKey() != getAID() && entry.getValue() instanceof Firefighter) {
@@ -169,6 +173,7 @@ public class Firefighter extends MyAgent {
 
     private void calcFireDestination() {
         if(!fireCells.isEmpty()) {
+            System.out.println(fireCells.size());
             List<Integer> cellDists = fireCells.stream()
                     .map(c -> MapState.calculateDist(c, this))
                     .collect(Collectors.toList());
@@ -181,6 +186,7 @@ public class Firefighter extends MyAgent {
     }
 
     private void requestNearestWater() {
+        waterCells.clear();
         ACLMessage reqMsg = new ACLMessage(ACLMessage.REQUEST);
         reqMsg.addReceiver(getEnvironment().getFirestationAID());
         reqMsg.setConversationId("request-water");
@@ -251,7 +257,7 @@ public class Firefighter extends MyAgent {
                 }
             }
             numReceivedMsg++;
-            if (numReceivedMsg >= getEnvironment().getFirefighters().size() / 2) {
+            if (numReceivedMsg >= 1) {
                 calcFireDestination();
                 numReceivedMsg = 0;
             }
@@ -308,13 +314,13 @@ public class Firefighter extends MyAgent {
             for (int i = 0; i < VIEWING_DIST * 2 + 1; i++) {
                 for (int j = 0; j < VIEWING_DIST * 2 + 1; j++) {
                     int cellX = state.getX() - VIEWING_DIST + i;
-                    int cellY = state.getY() - VIEWING_DIST + j;
+                    int cellY = state.getY() -   VIEWING_DIST + j;
                     MapCell cell = MapState.getGridPos(cellX, cellY);
                     processCell(i, j, cell);
                 }
             }
             // Firefighter surrounded by fire
-            if (fires.size() >= Math.pow(VIEWING_DIST * 2 + 1, 2) / 2) {
+            if (firesToExtinguish.size() >= Math.pow(VIEWING_DIST * 2 + 1, 2) / 2) {
                 state.decreaseHealth(HEALTH_DAMAGE);
             } else {
                 state.resetHealth();
@@ -353,9 +359,11 @@ public class Firefighter extends MyAgent {
         }
 
         protected void onTick() {
+            System.out.println(currentState);
             switch(currentState) {
                 case Driving: {
                     if (fires.isEmpty()) {
+
                         requestNearestFire();
                         move();
                     } else {
@@ -414,6 +422,7 @@ public class Firefighter extends MyAgent {
                             water = MAX_WATER_CAPACITY;
                         else
                             water += REFILL_PUMPING_VELOCITY;
+                        System.out.println(water);
                     } else {
                         move();
                     }
