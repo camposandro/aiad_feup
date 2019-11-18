@@ -22,11 +22,11 @@ import java.util.List;
 
 public class SimulationLauncher extends Repast3Launcher {
     //-------------------------------------------WORLD SELECTION--------------------------------------------//
-    public static int WORLD_WIDTH = 150;        // Recommended size = 200
-    public static int WORLD_HEIGHT = 75;       // Recommended size = 100
+    public static int WORLD_WIDTH = 200;        // Recommended size = 200
+    public static int WORLD_HEIGHT = 100;       // Recommended size = 100
 
-    public static int MAX_NUM_FIRES = 1;
-    public static int NUM_FIREFIGHTERS = 1;
+    public static int MAX_NUM_FIRES = 5;
+    public static int NUM_FIREFIGHTERS = 7;
 
     public static boolean RANDOMWORLD = false;
 
@@ -41,7 +41,9 @@ public class SimulationLauncher extends Repast3Launcher {
     public static int NUM_REMOTE_HOUSES = 2;
 
     public static int WORLD_UPDATE_RATE = 2000; // World update fixed rate
-    public static int FF_UPDATE_RATE = 300;
+    public static int FF_UPDATE_RATE = 200;
+    
+    public static int NUM_ROAMING_TURNS = 5;
     //-----------------------------------------------------------------------------------------------------//
     private Random rand;
 
@@ -92,8 +94,8 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     private void buildModel() {
-        setEnvironment(new Object2DGrid(envWidth, envHeight));
-        setMapState(new MapState(this,envWidth,envHeight));
+        setEnvironment(new Object2DGrid(WORLD_WIDTH, WORLD_HEIGHT));
+        setMapState(new MapState(this, WORLD_WIDTH, WORLD_HEIGHT));
     }
 
     private void buildSchedule() {
@@ -112,33 +114,11 @@ public class SimulationLauncher extends Repast3Launcher {
     protected void launchJADE() {
         setMainContainer(Runtime.instance().createMainContainer(new ProfileImpl()));
         try {
-            initializeMapCells();
+            updateEnvironment();
             launchFirefighters();
             launchFireStation();
         } catch(StaleProxyException e) {
             e.printStackTrace();
-        }
-    }
-
-    private void initializeMapCells() {
-        for (int i = 0; i < envWidth; i++) {
-            for (int j = 0; j < envHeight; j++) {
-                environment.putObjectAt(i,j,mapState.getGrid()[i][j]);
-            }
-        }
-    }
-
-    private void updateMap() {
-        for (int i = 0; i < envWidth; i++) {
-            for (int j = 0; j < envHeight; j++) {
-                environment.putObjectAt(i,j,mapState.getGrid()[i][j]);
-            }
-        }
-    }
-
-    private void updateAgents() {
-        for (Firefighter f: firefighters) {
-            environment.putObjectAt(f.getX(), f.getY(), f);
         }
     }
 
@@ -151,7 +131,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private void launchFirefighters() throws StaleProxyException {
         List<Firefighter> firefighters = new ArrayList<>();
-        for (int i = 0; i < numFirefighters; i++) {
+        for (int i = 0; i < NUM_FIREFIGHTERS; i++) {
             Firefighter ff = new Firefighter(this, 0, i);
             environment.putObjectAt(ff.getX(), ff.getY(), ff);
             mainContainer.acceptNewAgent("firefighter-" + i, ff).start();
@@ -161,8 +141,37 @@ public class SimulationLauncher extends Repast3Launcher {
         setFirefighters(firefighters);
     }
 
+    public AID getFirestationAID() {
+        return fireStation.getAID();
+    }
+
+    private void updateEnvironment() {
+        for (int i = 0; i < WORLD_WIDTH; i++) {
+            for (int j = 0; j < WORLD_HEIGHT; j++) {
+                environment.putObjectAt(i,j,mapState.getGrid()[i][j]);
+            }
+        }
+    }
+
+    private void updateAgents() {
+        List<Firefighter> nextFirefighters = new ArrayList<>();
+        for (int i = 0; i < firefighters.size(); i++) {
+            Firefighter ff = firefighters.get(i);
+            if (ff.getState().getHealth() <= 0) {
+                mainContainer.removeLocalAgent(ff);
+                agents.remove(ff.getAID(), ff);
+            } else {
+                nextFirefighters.add(ff);
+            }
+        }
+        setFirefighters(nextFirefighters);
+        for (Firefighter f: firefighters) {
+            environment.putObjectAt(f.getX(), f.getY(), f);
+        }
+    }
+
     public void simulationStep() {
-        updateMap();
+        updateEnvironment();
         updateAgents();
         displaySurface.updateDisplay();
     }
@@ -209,22 +218,6 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public void setEnvironment(Object2DGrid environment) {
         this.environment = environment;
-    }
-
-    public int getEnvWidth() {
-        return envWidth;
-    }
-
-    public void setEnvWidth(int envWidth) {
-        this.envWidth = envWidth;
-    }
-
-    public int getEnvHeight() {
-        return envHeight;
-    }
-
-    public void setEnvHeight(int envHeight) {
-        this.envHeight = envHeight;
     }
 
     public FireStation getFireStation() {

@@ -2,7 +2,7 @@ package utils;
 
 public class AgentState {
 
-    private int x;
+    protected int x;
     private int y;
     private int health;
 
@@ -13,6 +13,14 @@ public class AgentState {
     public AgentState(int x, int y) {
         setX(x);
         setY(y);
+        setHealth(100);
+    }
+
+    public void decreaseHealth(int damage) {
+        setHealth(health - damage);
+    }
+
+    public void resetHealth() {
         setHealth(100);
     }
 

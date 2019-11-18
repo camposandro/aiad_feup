@@ -5,22 +5,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import agents.Firefighter;
 import agents.MapCell;
 import launchers.SimulationLauncher;
 
 public class MapState {
     private static MapCell[][] grid;
 
-    private static int envWidth;
-    private static int envHeight;
+    public static int envWidth;
+    public static int envHeight;
 
     private static List<MapCell> fires = new ArrayList<>();
 
     private static HashSet<MapCell> fireCell = new HashSet<>();
-    public static MapCell fireCell1;
+    private static HashSet<MapCell> waterCell = new HashSet<>();
 
-
-    final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
     public MapState(SimulationLauncher launcher, int envWidth, int envHeight) {
         this.envWidth = envWidth;
@@ -45,7 +45,7 @@ public class MapState {
         service.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                HashSet<MapCell> fireCells = MapState.getFirecells();
+                HashSet<MapCell> fireCells = MapState.getFireCells();
                 HashSet<MapCell> a = (HashSet) fireCells.clone();
                 Iterator<MapCell> i = a.iterator();
                 while (i.hasNext())
@@ -68,8 +68,16 @@ public class MapState {
         this.grid = grid;
     }
 
-    public static HashSet<MapCell> getFirecells() {
+    public static List<MapCell> getFires() {
+        return fires;
+    }
+
+    public static HashSet<MapCell> getFireCells() {
         return fireCell;
+    }
+
+    public static HashSet<MapCell> getWaterCells() {
+        return waterCell;
     }
 
     public MapCell[][] createMapState(SimulationLauncher launcher, int width, int length) {
@@ -94,7 +102,7 @@ public class MapState {
         for(int i = 0; i < width; i++) {
             for (int j = 0; j < length; j++) {
                 if(i == 0 && j == 0){ // first column &  first row
-                        mapCell[i][j] = new MapCell(i, j, randVeg, randHum, 0);
+                        mapCell[i][j] = new MapCell(i, j, randVeg, randHum, MapCell.SoilType.VEGETATION);
                 }
                 else if(j == 0){ // first row
                     if(mapCell[i-1][j].getVegetationDensity() + range > 100){
@@ -127,7 +135,7 @@ public class MapState {
                     if(newVeg == 0)
                         newVeg = 1;
 
-                    mapCell[i][j] = new MapCell(i, j, newVeg, newHum, 0);
+                    mapCell[i][j] = new MapCell(i, j, newVeg, newHum, MapCell.SoilType.VEGETATION);
                 }
                 else{ // other columns
                     if(i == 0){
@@ -187,13 +195,21 @@ public class MapState {
                     newVeg = rand.nextInt(vegMax - vegMin) + vegMin;
                     newHum = rand.nextInt(humMax - humMin) + humMin;
 
-                    mapCell[i][j] = new MapCell(i, j, newVeg, newHum, 0);
+                    mapCell[i][j] = new MapCell(i, j, newVeg, newHum, MapCell.SoilType.VEGETATION);
                 }
             }
         }
 
         //Generate Water bodies
         mapCell = generateWaterBodies(mapCell);
+        for (int i = 0; i < envWidth; i++) {
+            for (int j = 0; j < envHeight; j++) {
+                MapCell cell = mapCell[i][j];
+                if (cell.getSoilType() == MapCell.SoilType.WATER) {
+                    waterCell.add(cell);
+                }
+            }
+        }
 
         //Generate Houses
         mapCell = generateHousesAndRoads(mapCell);
@@ -205,7 +221,6 @@ public class MapState {
         // Generate Fire cells
         for (int i = 0; i < fires.size(); i++) {
             MapCell f = fires.get(i);
-            fireCell1 = f;
             MapCell cell = mapCell[f.getX()][f.getY()];
             cell.setOnFire(true);
             fireCell.add(cell);
@@ -244,7 +259,7 @@ public class MapState {
             //lake center
             map[lakePositions[i][0]][lakePositions[i][1]].setVegetationDensity(0);
             map[lakePositions[i][0]][lakePositions[i][1]].setHumidityPercentage(100);
-            map[lakePositions[i][0]][lakePositions[i][1]].setSoilType(3);
+            map[lakePositions[i][0]][lakePositions[i][1]].setSoilType(MapCell.SoilType.WATER);
 
             //lake size
             if(lakePositions[i][0] - lakeRadius < 0){
@@ -280,7 +295,7 @@ public class MapState {
                         if(m >= 0 && n >= 0 && m < map.length && n < map[0].length){
                             map[m][n].setVegetationDensity(0);
                             map[m][n].setHumidityPercentage(100);
-                            map[m][n].setSoilType(3);
+                            map[m][n].setSoilType(MapCell.SoilType.WATER);
                         }
                     }
                     else{
@@ -288,7 +303,7 @@ public class MapState {
                         if(calculateDist(lakePositions[i][0], lakePositions[i][1], m, n) < r && m >= 0 && n >= 0 && m < map.length && n < map[0].length){
                             map[m][n].setVegetationDensity(0);
                             map[m][n].setHumidityPercentage(100);
-                            map[m][n].setSoilType(3);
+                            map[m][n].setSoilType(MapCell.SoilType.WATER);
                         }
                     }
                 }
@@ -321,7 +336,7 @@ public class MapState {
             //river position
             map[riverPositions[i][0]][riverPositions[i][1]].setVegetationDensity(0);
             map[riverPositions[i][0]][riverPositions[i][1]].setHumidityPercentage(100);
-            map[riverPositions[i][0]][riverPositions[i][1]].setSoilType(3);
+            map[riverPositions[i][0]][riverPositions[i][1]].setSoilType(MapCell.SoilType.WATER);
 
             //river generation
             int riverMinX = riverPositions[i][0] - (riverWidth - 1)/2;
@@ -336,7 +351,7 @@ public class MapState {
                     if(m + deviation >= 0 && n >= 0 && m + deviation < map.length && n < map[0].length){
                         map[m + deviation][n].setVegetationDensity(0);
                         map[m + deviation][n].setHumidityPercentage(100);
-                        map[m + deviation][n].setSoilType(3);
+                        map[m + deviation][n].setSoilType(MapCell.SoilType.WATER);
                     }
 
                 }
@@ -391,7 +406,7 @@ public class MapState {
             villagePositions[i][0] = villageX;
             villagePositions[i][1] = villageY;
 
-            if(map[villagePositions[i][0]][villagePositions[i][1]].getSoilType() != 0){ //Ensure center of village isn't in water
+            if(map[villagePositions[i][0]][villagePositions[i][1]].getSoilType() != MapCell.SoilType.WATER){ //Ensure center of village isn't in water
                 i--;
             }
             else{
@@ -435,7 +450,7 @@ public class MapState {
                 houseX = rand.nextInt(map.length);
                 houseY = rand.nextInt(map[0].length);
 
-                while(map[houseX][houseY].getSoilType() != 0){
+                while(map[houseX][houseY].getSoilType() != MapCell.SoilType.VEGETATION){
                     houseX = rand.nextInt(map.length);
                     houseY = rand.nextInt(map[0].length);
                 }
@@ -443,7 +458,7 @@ public class MapState {
 
                 map[houseX][houseY].setVegetationDensity(0);
                 map[houseX][houseY].setHumidityPercentage(100);
-                map[houseX][houseY].setSoilType(4);
+                map[houseX][houseY].setSoilType(MapCell.SoilType.HOUSE);
 
                 map = generateDirtRoad(map, houseX, houseY);
             }
@@ -466,53 +481,53 @@ public class MapState {
                 }
 
                 for (int j = 1; j <= dirtRoadLength; j++) {
-                    if (dirtRoadDirection == 0 && map[roadConnection[0]][roadConnection[1] - j].getSoilType() == 0) {
+                    if (dirtRoadDirection == 0 && map[roadConnection[0]][roadConnection[1] - j].getSoilType() == MapCell.SoilType.VEGETATION) {
                         if(j == dirtRoadLength){
                             map[roadConnection[0]][roadConnection[1] - j].setVegetationDensity(0);
                             map[roadConnection[0]][roadConnection[1] - j].setHumidityPercentage(100);
-                            map[roadConnection[0]][roadConnection[1] - j].setSoilType(4);
+                            map[roadConnection[0]][roadConnection[1] - j].setSoilType(MapCell.SoilType.HOUSE);
                         }
                         else{
                             map[roadConnection[0]][roadConnection[1] - j].setVegetationDensity(0);
                             map[roadConnection[0]][roadConnection[1] - j].setHumidityPercentage(100);
-                            map[roadConnection[0]][roadConnection[1] - j].setSoilType(2);
+                            map[roadConnection[0]][roadConnection[1] - j].setSoilType(MapCell.SoilType.DIRT);
                         }
                     }
-                    else if (dirtRoadDirection == 1 && map[roadConnection[0] - j][roadConnection[1]].getSoilType() == 0) {
+                    else if (dirtRoadDirection == 1 && map[roadConnection[0] - j][roadConnection[1]].getSoilType() == MapCell.SoilType.VEGETATION) {
                         if(j == dirtRoadLength){
                             map[roadConnection[0] - j][roadConnection[1]].setVegetationDensity(0);
                             map[roadConnection[0] - j][roadConnection[1]].setHumidityPercentage(100);
-                            map[roadConnection[0] - j][roadConnection[1]].setSoilType(4);
+                            map[roadConnection[0] - j][roadConnection[1]].setSoilType(MapCell.SoilType.HOUSE);
                         }
                         else{
                             map[roadConnection[0] - j][roadConnection[1]].setVegetationDensity(0);
                             map[roadConnection[0] - j][roadConnection[1]].setHumidityPercentage(100);
-                            map[roadConnection[0] - j][roadConnection[1]].setSoilType(2);
+                            map[roadConnection[0] - j][roadConnection[1]].setSoilType(MapCell.SoilType.DIRT);
                         }
 
                     }
-                    else if (dirtRoadDirection == 2 && map[roadConnection[0]][roadConnection[1] + j].getSoilType() == 0) {
+                    else if (dirtRoadDirection == 2 && map[roadConnection[0]][roadConnection[1] + j].getSoilType() == MapCell.SoilType.VEGETATION) {
                         if(j == dirtRoadLength){
                             map[roadConnection[0]][roadConnection[1] + j].setVegetationDensity(0);
                             map[roadConnection[0]][roadConnection[1] + j].setHumidityPercentage(100);
-                            map[roadConnection[0]][roadConnection[1] + j].setSoilType(4);
+                            map[roadConnection[0]][roadConnection[1] + j].setSoilType(MapCell.SoilType.HOUSE);
                         }
                         else{
                             map[roadConnection[0]][roadConnection[1] + j].setVegetationDensity(0);
                             map[roadConnection[0]][roadConnection[1] + j].setHumidityPercentage(100);
-                            map[roadConnection[0]][roadConnection[1] + j].setSoilType(2);
+                            map[roadConnection[0]][roadConnection[1] + j].setSoilType(MapCell.SoilType.DIRT);
                         }
                     }
-                    else if (dirtRoadDirection == 3 && map[roadConnection[0] + j][roadConnection[1]].getSoilType() == 0) {
+                    else if (dirtRoadDirection == 3 && map[roadConnection[0] + j][roadConnection[1]].getSoilType() == MapCell.SoilType.VEGETATION) {
                         if(j == dirtRoadLength){
                             map[roadConnection[0] + j][roadConnection[1]].setVegetationDensity(0);
                             map[roadConnection[0] + j][roadConnection[1]].setHumidityPercentage(100);
-                            map[roadConnection[0] + j][roadConnection[1]].setSoilType(4);
+                            map[roadConnection[0] + j][roadConnection[1]].setSoilType(MapCell.SoilType.HOUSE);
                         }
                         else{
                             map[roadConnection[0] + j][roadConnection[1]].setVegetationDensity(0);
                             map[roadConnection[0] + j][roadConnection[1]].setHumidityPercentage(100);
-                            map[roadConnection[0] + j][roadConnection[1]].setSoilType(2);
+                            map[roadConnection[0] + j][roadConnection[1]].setSoilType(MapCell.SoilType.DIRT);
                         }
                     }
 
@@ -531,295 +546,295 @@ public class MapState {
         for(int i = 0; i < numOfVillages; i++){
             map[villagePositions[i][0]][villagePositions[i][1]].setVegetationDensity(0);
             map[villagePositions[i][0]][villagePositions[i][1]].setHumidityPercentage(100);
-            map[villagePositions[i][0]][villagePositions[i][1]].setSoilType(5);
+            map[villagePositions[i][0]][villagePositions[i][1]].setSoilType(MapCell.SoilType.CENTRAL_SQUARE);
 
             if(housesPerVillage[i] >= 15){ // 2x1 rectangle
                 map[villagePositions[i][0] + 1][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1]].setSoilType(5);
+                map[villagePositions[i][0] + 1][villagePositions[i][1]].setSoilType(MapCell.SoilType.CENTRAL_SQUARE);
             }
             if(housesPerVillage[i] >= 20){ // 2x2 square
                 map[villagePositions[i][0]][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] + 1].setSoilType(5);
+                map[villagePositions[i][0]][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.CENTRAL_SQUARE);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setSoilType(5);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.CENTRAL_SQUARE);
             }
             if(housesPerVillage[i] >= 25){ // 3x2 rectangle
                 map[villagePositions[i][0] - 1][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1]].setSoilType(5);
+                map[villagePositions[i][0] - 1][villagePositions[i][1]].setSoilType(MapCell.SoilType.CENTRAL_SQUARE);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setSoilType(5);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.CENTRAL_SQUARE);
             }
             if(housesPerVillage[i] >= 30){ // 3x3 square
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setSoilType(5);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.CENTRAL_SQUARE);
 
                 map[villagePositions[i][0]][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] - 1].setSoilType(5);
+                map[villagePositions[i][0]][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.CENTRAL_SQUARE);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setSoilType(5);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.CENTRAL_SQUARE);
             }
 
             //generate street around central square
             if(housesPerVillage[i] < 15){
                 map[villagePositions[i][0] + 1][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1]].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1]].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0]][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0]][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1]].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1]].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0]][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0]][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
             }
             else if(housesPerVillage[i] >= 15 && housesPerVillage[i] < 20){ // 2x1 rectangle
                 map[villagePositions[i][0] + 2][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1]].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1]].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0]][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0]][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1]].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1]].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0]][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0]][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
             }
             else if(housesPerVillage[i] >= 20 && housesPerVillage[i] < 25){ // 2x2 square
                 map[villagePositions[i][0] + 2][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1]].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1]].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0]][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0]][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1]].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1]].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0]][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0]][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
             }
             else if(housesPerVillage[i] >= 25 && housesPerVillage[i] < 30){ // 3x2 rectangle
                 map[villagePositions[i][0] + 2][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1]].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1]].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0]][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0]][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 2][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] - 2][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 2][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] - 2][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 2][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 2][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 2][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] - 2][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 2][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] - 2][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 2][villagePositions[i][1]].setSoilType(1);
+                map[villagePositions[i][0] - 2][villagePositions[i][1]].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 2][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 2][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 2][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] - 2][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0]][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0]][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
             }
             else if(housesPerVillage[i] >= 30){ // 3x3 square
                 map[villagePositions[i][0] + 2][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1]].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1]].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0]][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0]][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 2][villagePositions[i][1] + 2].setVegetationDensity(0);
                 map[villagePositions[i][0] - 2][villagePositions[i][1] + 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 2][villagePositions[i][1] + 2].setSoilType(1);
+                map[villagePositions[i][0] - 2][villagePositions[i][1] + 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 2][villagePositions[i][1] + 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 2][villagePositions[i][1] + 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 2][villagePositions[i][1] + 1].setSoilType(1);
+                map[villagePositions[i][0] - 2][villagePositions[i][1] + 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 2][villagePositions[i][1]].setVegetationDensity(0);
                 map[villagePositions[i][0] - 2][villagePositions[i][1]].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 2][villagePositions[i][1]].setSoilType(1);
+                map[villagePositions[i][0] - 2][villagePositions[i][1]].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 2][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] - 2][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 2][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] - 2][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 2][villagePositions[i][1] - 2].setVegetationDensity(0);
                 map[villagePositions[i][0] - 2][villagePositions[i][1] - 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 2][villagePositions[i][1] - 2].setSoilType(1);
+                map[villagePositions[i][0] - 2][villagePositions[i][1] - 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 2].setVegetationDensity(0);
                 map[villagePositions[i][0] - 1][villagePositions[i][1] - 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] - 1][villagePositions[i][1] - 2].setSoilType(1);
+                map[villagePositions[i][0] - 1][villagePositions[i][1] - 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0]][villagePositions[i][1] - 2].setVegetationDensity(0);
                 map[villagePositions[i][0]][villagePositions[i][1] - 2].setHumidityPercentage(100);
-                map[villagePositions[i][0]][villagePositions[i][1] - 2].setSoilType(1);
+                map[villagePositions[i][0]][villagePositions[i][1] - 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 2].setVegetationDensity(0);
                 map[villagePositions[i][0] + 1][villagePositions[i][1] - 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 1][villagePositions[i][1] - 2].setSoilType(1);
+                map[villagePositions[i][0] + 1][villagePositions[i][1] - 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 2].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] - 2].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] - 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 2].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 2].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] - 2].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] - 2].setSoilType(MapCell.SoilType.ASPHALT);
 
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setVegetationDensity(0);
                 map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setHumidityPercentage(100);
-                map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setSoilType(1);
+                map[villagePositions[i][0] + 2][villagePositions[i][1] - 1].setSoilType(MapCell.SoilType.ASPHALT);
             }
 
         }
@@ -915,12 +930,12 @@ public class MapState {
                         if(streetOrientation == 0){//Vertical
                             map[upperLeftCentralSquare[0]][upperLeftCentralSquare[1] - (n + 1)].setVegetationDensity(0);
                             map[upperLeftCentralSquare[0]][upperLeftCentralSquare[1] - (n + 1)].setHumidityPercentage(100);
-                            map[upperLeftCentralSquare[0]][upperLeftCentralSquare[1] - (n + 1)].setSoilType(1);
+                            map[upperLeftCentralSquare[0]][upperLeftCentralSquare[1] - (n + 1)].setSoilType(MapCell.SoilType.ASPHALT);
                         }
                         else{//Horizontal
                             map[upperLeftCentralSquare[0] - (n + 1)][upperLeftCentralSquare[1]].setVegetationDensity(0);
                             map[upperLeftCentralSquare[0] - (n + 1)][upperLeftCentralSquare[1]].setHumidityPercentage(100);
-                            map[upperLeftCentralSquare[0] - (n + 1)][upperLeftCentralSquare[1]].setSoilType(1);
+                            map[upperLeftCentralSquare[0] - (n + 1)][upperLeftCentralSquare[1]].setSoilType(MapCell.SoilType.ASPHALT);
                         }
                     }
                 }
@@ -929,12 +944,12 @@ public class MapState {
                         if(streetOrientation == 0){//Vertical
                             map[upperRightCentralSquare[0]][upperRightCentralSquare[1] - (n + 1)].setVegetationDensity(0);
                             map[upperRightCentralSquare[0]][upperRightCentralSquare[1] - (n + 1)].setHumidityPercentage(100);
-                            map[upperRightCentralSquare[0]][upperRightCentralSquare[1] - (n + 1)].setSoilType(1);
+                            map[upperRightCentralSquare[0]][upperRightCentralSquare[1] - (n + 1)].setSoilType(MapCell.SoilType.ASPHALT);
                         }
                         else{//Horizontal
                             map[upperRightCentralSquare[0] + (n + 1)][upperRightCentralSquare[1]].setVegetationDensity(0);
                             map[upperRightCentralSquare[0] + (n + 1)][upperRightCentralSquare[1]].setHumidityPercentage(100);
-                            map[upperRightCentralSquare[0] + (n + 1)][upperRightCentralSquare[1]].setSoilType(1);
+                            map[upperRightCentralSquare[0] + (n + 1)][upperRightCentralSquare[1]].setSoilType(MapCell.SoilType.ASPHALT);
                         }
                     }
                 }
@@ -943,12 +958,12 @@ public class MapState {
                         if(streetOrientation == 0){//Vertical
                             map[downerLeftCentralSquare[0]][downerLeftCentralSquare[1] + (n + 1)].setVegetationDensity(0);
                             map[downerLeftCentralSquare[0]][downerLeftCentralSquare[1] + (n + 1)].setHumidityPercentage(100);
-                            map[downerLeftCentralSquare[0]][downerLeftCentralSquare[1] + (n + 1)].setSoilType(1);
+                            map[downerLeftCentralSquare[0]][downerLeftCentralSquare[1] + (n + 1)].setSoilType(MapCell.SoilType.ASPHALT);
                         }
                         else{//Horizontal
                             map[downerLeftCentralSquare[0] - (n + 1)][downerLeftCentralSquare[1]].setVegetationDensity(0);
                             map[downerLeftCentralSquare[0] - (n + 1)][downerLeftCentralSquare[1]].setHumidityPercentage(100);
-                            map[downerLeftCentralSquare[0] - (n + 1)][downerLeftCentralSquare[1]].setSoilType(1);
+                            map[downerLeftCentralSquare[0] - (n + 1)][downerLeftCentralSquare[1]].setSoilType(MapCell.SoilType.ASPHALT);
                         }
                     }
                 }
@@ -957,12 +972,12 @@ public class MapState {
                         if(streetOrientation == 0){//Vertical
                             map[downerRightCentralSquare[0]][downerRightCentralSquare[1] + (n + 1)].setVegetationDensity(0);
                             map[downerRightCentralSquare[0]][downerRightCentralSquare[1] + (n + 1)].setHumidityPercentage(100);
-                            map[downerRightCentralSquare[0]][downerRightCentralSquare[1] + (n + 1)].setSoilType(1);
+                            map[downerRightCentralSquare[0]][downerRightCentralSquare[1] + (n + 1)].setSoilType(MapCell.SoilType.ASPHALT);
                         }
                         else{//Horizontal
                             map[downerRightCentralSquare[0] + (n + 1)][downerRightCentralSquare[1]].setVegetationDensity(0);
                             map[downerRightCentralSquare[0] + (n + 1)][downerRightCentralSquare[1]].setHumidityPercentage(100);
-                            map[downerRightCentralSquare[0] + (n + 1)][downerRightCentralSquare[1]].setSoilType(1);
+                            map[downerRightCentralSquare[0] + (n + 1)][downerRightCentralSquare[1]].setSoilType(MapCell.SoilType.ASPHALT);
                         }
                     }
                 }
@@ -994,10 +1009,10 @@ public class MapState {
             while(numberOfHouses < housesPerVillage[i]) {
                 for (int n = villageUpperLeft[0] + 1; n < villageDownerRight[0] - 1; n++) {
                     for (int m = villageUpperLeft[1] + 1; m < villageDownerRight[1] - 1; m++) {
-                        if (housesPerVillage[i] >= numberOfHouses && map[n][m].getSoilType() == 0 && nextToRoad(map, n, m) && rand.nextInt(10) == 0) {
+                        if (housesPerVillage[i] >= numberOfHouses && map[n][m].getSoilType() == MapCell.SoilType.VEGETATION && nextToRoad(map, n, m) && rand.nextInt(10) == 0) {
                             map[n][m].setVegetationDensity(0);
                             map[n][m].setHumidityPercentage(100);
-                            map[n][m].setSoilType(4);
+                            map[n][m].setSoilType(MapCell.SoilType.HOUSE);
 
                             numberOfHouses++;
                         }
@@ -1046,7 +1061,7 @@ public class MapState {
             while(mainRoadConnection[0] == 0 && mainRoadConnection[1] == 0){
                 for(int n = villageUpperLeft[0] - 1; n < villageDownerRight[0]; n++){
                     for(int m = villageUpperLeft[1] - 1; m < villageDownerRight[1]; m++){
-                        if(map[n][m].getSoilType() == 1 && ((n <= villagePositions[i][0] - mainRoadMinimumDistanceToCentralSquareX && m >= villagePositions[i][1] + mainRoadMinimumDistanceToCentralSquareY) || (n >= villagePositions[i][0] + mainRoadMinimumDistanceToCentralSquareX && m >= villagePositions[i][1] + mainRoadMinimumDistanceToCentralSquareY) || (m <= villagePositions[i][1] - mainRoadMinimumDistanceToCentralSquareY && n <= villagePositions[i][0] - mainRoadMinimumDistanceToCentralSquareX) || (m <= villagePositions[i][1] - mainRoadMinimumDistanceToCentralSquareY && n >= villagePositions[i][0] + mainRoadMinimumDistanceToCentralSquareX)) && rand.nextInt(housesPerVillage[i]) == 0){
+                        if(map[n][m].getSoilType() == MapCell.SoilType.ASPHALT && ((n <= villagePositions[i][0] - mainRoadMinimumDistanceToCentralSquareX && m >= villagePositions[i][1] + mainRoadMinimumDistanceToCentralSquareY) || (n >= villagePositions[i][0] + mainRoadMinimumDistanceToCentralSquareX && m >= villagePositions[i][1] + mainRoadMinimumDistanceToCentralSquareY) || (m <= villagePositions[i][1] - mainRoadMinimumDistanceToCentralSquareY && n <= villagePositions[i][0] - mainRoadMinimumDistanceToCentralSquareX) || (m <= villagePositions[i][1] - mainRoadMinimumDistanceToCentralSquareY && n >= villagePositions[i][0] + mainRoadMinimumDistanceToCentralSquareX)) && rand.nextInt(housesPerVillage[i]) == 0){
                             mainRoadConnection[0] = n;
                             mainRoadConnection[1] = m;
                         }
@@ -1083,7 +1098,7 @@ public class MapState {
 
                 map[x][y].setVegetationDensity(0);
                 map[x][y].setHumidityPercentage(100);
-                map[x][y].setSoilType(1);
+                map[x][y].setSoilType(MapCell.SoilType.ASPHALT);
 
                 nextStraightLength--;
             }
@@ -1106,7 +1121,7 @@ public class MapState {
 
                 map[x][y].setVegetationDensity(0);
                 map[x][y].setHumidityPercentage(100);
-                map[x][y].setSoilType(1);
+                map[x][y].setSoilType(MapCell.SoilType.ASPHALT);
 
                 nextStraightLength--;
             }
@@ -1127,7 +1142,7 @@ public class MapState {
 
                 map[x][y].setVegetationDensity(0);
                 map[x][y].setHumidityPercentage(100);
-                map[x][y].setSoilType(1);
+                map[x][y].setSoilType(MapCell.SoilType.ASPHALT);
 
                 nextStraightLength--;
             }
@@ -1150,7 +1165,7 @@ public class MapState {
 
                 map[x][y].setVegetationDensity(0);
                 map[x][y].setHumidityPercentage(100);
-                map[x][y].setSoilType(1);
+                map[x][y].setSoilType(MapCell.SoilType.ASPHALT);
 
                 nextStraightLength--;
             }
@@ -1166,10 +1181,10 @@ public class MapState {
             if(houseY < houseX){//up
                 y--;
                 while(y >= 0){
-                    if(map[houseX][y].getSoilType() == 0  && (map[0].length - houseY) > houseY ){
+                    if(map[houseX][y].getSoilType() == MapCell.SoilType.VEGETATION && (map[0].length - houseY) > houseY ){
                         map[houseX][y].setVegetationDensity(0);
                         map[houseX][y].setHumidityPercentage(100);
-                        map[houseX][y].setSoilType(2);
+                        map[houseX][y].setSoilType(MapCell.SoilType.DIRT);
                     }
                     y--;
                 }
@@ -1177,10 +1192,10 @@ public class MapState {
             else if((map[0].length - houseY) < houseX){//down
                 y++;
                 while(y < map[0].length){
-                    if(map[houseX][y].getSoilType() == 0) {
+                    if(map[houseX][y].getSoilType() == MapCell.SoilType.VEGETATION) {
                         map[houseX][y].setVegetationDensity(0);
                         map[houseX][y].setHumidityPercentage(100);
-                        map[houseX][y].setSoilType(2);
+                        map[houseX][y].setSoilType(MapCell.SoilType.DIRT);
                     }
                     y++;
                 }
@@ -1188,10 +1203,10 @@ public class MapState {
             else{//left
                 x--;
                 while(x >= 0){
-                    if(map[x][houseY].getSoilType() == 0){
+                    if(map[x][houseY].getSoilType() == MapCell.SoilType.VEGETATION){
                         map[x][houseY].setVegetationDensity(0);
                         map[x][houseY].setHumidityPercentage(100);
-                        map[x][houseY].setSoilType(2);
+                        map[x][houseY].setSoilType(MapCell.SoilType.DIRT);
                     }
                     x--;
                 }
@@ -1201,10 +1216,10 @@ public class MapState {
             if(houseY < (map.length - houseX) && (map[0].length - houseY) > houseY ){//up
                 y--;
                 while(y >= 0){
-                    if(map[houseX][y].getSoilType() == 0){
+                    if(map[houseX][y].getSoilType() == MapCell.SoilType.VEGETATION){
                         map[houseX][y].setVegetationDensity(0);
                         map[houseX][y].setHumidityPercentage(100);
-                        map[houseX][y].setSoilType(2);
+                        map[houseX][y].setSoilType(MapCell.SoilType.DIRT);
                     }
                     y--;
                 }
@@ -1212,10 +1227,10 @@ public class MapState {
             else if((map[0].length - houseY) < (map.length - houseX)){//down
                 y++;
                 while(y < map[0].length){
-                    if(map[houseX][y].getSoilType() == 0){
+                    if(map[houseX][y].getSoilType() == MapCell.SoilType.VEGETATION){
                         map[houseX][y].setVegetationDensity(0);
                         map[houseX][y].setHumidityPercentage(100);
-                        map[houseX][y].setSoilType(2);
+                        map[houseX][y].setSoilType(MapCell.SoilType.DIRT);
                     }
                     y++;
                 }
@@ -1223,10 +1238,10 @@ public class MapState {
             else{//right
                 x++;
                 while(x < map.length){
-                    if(map[x][houseY].getSoilType() == 0){
+                    if(map[x][houseY].getSoilType() == MapCell.SoilType.VEGETATION){
                         map[x][houseY].setVegetationDensity(0);
                         map[x][houseY].setHumidityPercentage(100);
-                        map[x][houseY].setSoilType(2);
+                        map[x][houseY].setSoilType(MapCell.SoilType.DIRT);
                     }
                     x++;
                 }
@@ -1242,7 +1257,7 @@ public class MapState {
 
         for(int i = 20; i < map.length - 20; i++){
             for(int j = 20; j < map[0].length - 20; j++){
-                if(map[i][j].getSoilType() == 1 && rand.nextInt(map.length * map[0].length / 500) == 0){
+                if(map[i][j].getSoilType() == MapCell.SoilType.ASPHALT && rand.nextInt(map.length * map[0].length / 500) == 0){
                     roadConnection[0] = i;
                     roadConnection[1] = j;
                 }
@@ -1253,7 +1268,7 @@ public class MapState {
     }
 
     public boolean nextToRoad(MapCell[][] map, int x, int y){
-        if(map[x-1][y].getSoilType() == 1  || map[x+1][y].getSoilType() == 1 || map[x][y-1].getSoilType() == 1 || map[x][y+1].getSoilType() == 1){
+        if(map[x-1][y].getSoilType() == MapCell.SoilType.ASPHALT || map[x+1][y].getSoilType() == MapCell.SoilType.ASPHALT || map[x][y-1].getSoilType() == MapCell.SoilType.ASPHALT || map[x][y+1].getSoilType() == MapCell.SoilType.ASPHALT){
             return true;
         }
 
@@ -1262,5 +1277,11 @@ public class MapState {
 
     public static int calculateDist(int x1, int y1, int x2, int y2){
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+    }
+
+    public static int calculateDist(MapCell c1, MapCell c2) { return Math.abs(c1.getX() - c2.getX()) + Math.abs(c1.getY() - c2.getY()); }
+
+    public static int calculateDist(MapCell cell, Firefighter ff) {
+        return Math.abs(cell.getX() - ff.getX()) + Math.abs(cell.getY() - ff.getY());
     }
 }
