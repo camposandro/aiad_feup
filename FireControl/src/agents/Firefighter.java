@@ -173,7 +173,6 @@ public class Firefighter extends MyAgent {
 
     private void calcFireDestination() {
         if(!fireCells.isEmpty()) {
-            System.out.println(fireCells.size());
             List<Integer> cellDists = fireCells.stream()
                     .map(c -> MapState.calculateDist(c, this))
                     .collect(Collectors.toList());
@@ -359,7 +358,6 @@ public class Firefighter extends MyAgent {
         }
 
         protected void onTick() {
-            System.out.println(currentState);
             switch(currentState) {
                 case Driving: {
                     if (fires.isEmpty()) {
@@ -422,7 +420,6 @@ public class Firefighter extends MyAgent {
                             water = MAX_WATER_CAPACITY;
                         else
                             water += REFILL_PUMPING_VELOCITY;
-                        System.out.println(water);
                     } else {
                         move();
                     }
