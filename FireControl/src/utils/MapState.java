@@ -20,8 +20,6 @@ public class MapState {
     private static HashSet<MapCell> fireCell = new HashSet<>();
     private static HashSet<MapCell> waterCell = new HashSet<>();
 
-    public static MapCell fireCell1;
-
     private final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
     public MapState(SimulationLauncher launcher, int envWidth, int envHeight) {
@@ -68,6 +66,10 @@ public class MapState {
 
     public void setGrid(MapCell[][] grid) {
         this.grid = grid;
+    }
+
+    public static List<MapCell> getFires() {
+        return fires;
     }
 
     public static HashSet<MapCell> getFireCells() {
@@ -219,7 +221,6 @@ public class MapState {
         // Generate Fire cells
         for (int i = 0; i < fires.size(); i++) {
             MapCell f = fires.get(i);
-            fireCell1 = f;
             MapCell cell = mapCell[f.getX()][f.getY()];
             cell.setOnFire(true);
             fireCell.add(cell);

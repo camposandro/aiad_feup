@@ -39,17 +39,13 @@ public class FireStation extends MyAgent {
         public void action() {
             ACLMessage informMsg = new ACLMessage(ACLMessage.INFORM);
 
-            List<MapCell> fireCells = new ArrayList<>();
-            Iterator<MapCell> iter = MapState.getFireCells().iterator();
-            while (iter.hasNext()) {
-                fireCells.add(iter.next());
-            }
+            List<MapCell> fires = MapState.getFires();
 
             int firesIdx = 0;
             MapCell currentCell;
             for (Map.Entry<AID, MyAgent> entry : getEnvironment().agents.entrySet()) {
                 if (entry.getValue() instanceof Firefighter) {
-                    currentCell = fireCells.get(firesIdx);
+                    currentCell = fires.get(firesIdx);
 
                     AID firefighterAid = entry.getKey();
                     informMsg.clearAllReceiver();
@@ -60,7 +56,7 @@ public class FireStation extends MyAgent {
                     informMsg.setContent(dest);
                     send(informMsg);
 
-                    if (fireCells.size() - 1 == firesIdx) {
+                    if (fires.size() - 1 == firesIdx) {
                         firesIdx = -1;
                     }
                     firesIdx++;

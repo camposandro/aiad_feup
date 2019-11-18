@@ -122,13 +122,12 @@ public class Firefighter extends MyAgent {
         List<Integer> cellDists = cells.stream()
                 .map(c -> MapState.calculateDist(c, destCell))
                 .collect(Collectors.toList());
-        int minDistCellIndex = cellDists.indexOf(Collections.min(cellDists));
-
-        MapCell nextPos = cells.get(minDistCellIndex);
-        setX(nextPos.getX());
-        setY(nextPos.getY());
-        System.out.println("pos = " + getX() + "," + getY());
-        System.out.println("dest = " + destination[0] + "," + destination[1]);
+        if (!cellDists.isEmpty()) {
+            int minDistCellIndex = cellDists.indexOf(Collections.min(cellDists));
+            MapCell nextPos = cells.get(minDistCellIndex);
+            setX(nextPos.getX());
+            setY(nextPos.getY());
+        }
 
         /*if (state.getX() < destination[0])
             setX(state.getX() + 1);
@@ -166,16 +165,6 @@ public class Firefighter extends MyAgent {
         }
         reqMsg.setConversationId("request-fires");
         send(reqMsg);
-
-        /* Schedule world update
-        service.schedule(new Runnable() {
-            @Override
-            public void run() {
-                if (fireCells.isEmpty()) {
-                    currentState = State.Searching;
-                }
-            }
-        }, 2, TimeUnit.SECONDS);*/
     }
 
     private void calcFireDestination() {
@@ -364,13 +353,10 @@ public class Firefighter extends MyAgent {
         }
 
         protected void onTick() {
-            System.out.println(currentState);
             switch(currentState) {
                 case Driving: {
                     if (fires.isEmpty()) {
                         requestNearestFire();
-                        move();
-                    } else if (!arrived()) {
                         move();
                     } else {
                         currentState = State.Searching;
@@ -412,6 +398,7 @@ public class Firefighter extends MyAgent {
                             currentState = State.Driving;
                         } else {
                             requestNearestFire();
+                            //currentState = State.Searching;
                         }
                     } else {
                         extinguishFire();
