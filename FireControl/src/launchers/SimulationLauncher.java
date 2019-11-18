@@ -21,29 +21,43 @@ import java.util.*;
 import java.util.List;
 
 public class SimulationLauncher extends Repast3Launcher {
+    //-------------------------------------------WORLD SELECTION--------------------------------------------//
+    public static int WORLD_WIDTH = 200;        // Recommended size = 200
+    public static int WORLD_HEIGHT = 100;       // Recommended size = 100
 
-    // World update fixed rate
-    public static int WORLD_UPDATE_RATE = 2000;
-    public static int FF_UPDATE_RATE = 200;
     public static int MAX_NUM_FIRES = 5;
-    public static int NUM_FIREFIGHTERS = 5;
-    public static int NUM_ROAMING_TURNS = 3;
+    public static int NUM_FIREFIGHTERS = 7;
 
-    // Minimum size             = 150x75
-    // Recommended size         = 200x100
-    // Recommended maximum size = 800X400
-    // Absolute Repast Maximum  = 1200x600
-    private static int ENV_WIDTH = 200;
-    private static int ENV_HEIGHT = 100;
+    public static boolean RANDOMWORLD = false;
 
+    public static int NUM_RIVERS = 1;
+    public static int RIVER_MAX_WIDTH = 5;
+    public static int NUM_LAKES = 1;
+    public static int LAKE_MAX_RADIUS = 12;
+
+    public static int NUM_VILLAGES = 1;
+    public static int VILLAGE_MAX_HOUSES = 64;
+
+    public static int NUM_REMOTE_HOUSES = 2;
+
+    public static int WORLD_UPDATE_RATE = 2000; // World update fixed rate
+    public static int FF_UPDATE_RATE = 200;
+    
+    public static int NUM_ROAMING_TURNS = 5;
+    //-----------------------------------------------------------------------------------------------------//
     private Random rand;
 
     private ContainerController mainContainer;
 
     private DisplaySurface displaySurface;
     private Object2DGrid environment;
+    private int envWidth = WORLD_WIDTH;
+    private int envHeight = WORLD_HEIGHT;
 
     private MapState mapState;
+
+    private int numFirefighters = NUM_FIREFIGHTERS;
+    private int numFires = 1;
 
     private FireStation fireStation;
     private List<Firefighter> firefighters;
@@ -80,8 +94,8 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     private void buildModel() {
-        setEnvironment(new Object2DGrid(ENV_WIDTH, ENV_HEIGHT));
-        setMapState(new MapState(this,ENV_WIDTH, ENV_HEIGHT));
+        setEnvironment(new Object2DGrid(WORLD_WIDTH, WORLD_HEIGHT));
+        setMapState(new MapState(this, WORLD_WIDTH, WORLD_HEIGHT));
     }
 
     private void buildSchedule() {
@@ -132,8 +146,8 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     private void updateEnvironment() {
-        for (int i = 0; i < ENV_WIDTH; i++) {
-            for (int j = 0; j < ENV_HEIGHT; j++) {
+        for (int i = 0; i < WORLD_WIDTH; i++) {
+            for (int j = 0; j < WORLD_HEIGHT; j++) {
                 environment.putObjectAt(i,j,mapState.getGrid()[i][j]);
             }
         }
