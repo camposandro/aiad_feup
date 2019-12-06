@@ -28,7 +28,7 @@ public class MapState {
 
         // Generate fires
         Random rand = new Random();
-        int numFires = rand.nextInt(SimulationLauncher.MAX_NUM_FIRES) + 1;
+        double numFires = launcher.getNumFires();
         for (int i = 0; i < numFires; i++) {
             MapCell newFireCell;
             do {

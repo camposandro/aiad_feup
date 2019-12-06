@@ -40,8 +40,8 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public static int NUM_REMOTE_HOUSES = 2;
 
-    public static int WORLD_UPDATE_RATE = 2000; // World update fixed rate
-    public static int FF_UPDATE_RATE = 200;
+    public static int WORLD_UPDATE_RATE = 1000; // World update fixed rate
+    public static int FF_UPDATE_RATE = 10;
     
     public static int NUM_ROAMING_TURNS = 5;
     //-----------------------------------------------------------------------------------------------------//
@@ -56,8 +56,8 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private MapState mapState;
 
-    private int numFirefighters = NUM_FIREFIGHTERS;
-    private int numFires = 1;
+    private double NumFirefighters = NUM_FIREFIGHTERS;
+    private double NumFires = MAX_NUM_FIRES;
 
     private FireStation fireStation;
     private List<Firefighter> firefighters;
@@ -71,7 +71,7 @@ public class SimulationLauncher extends Repast3Launcher {
     public static void main(String[] args) throws IOException {
         boolean BATCH_MODE = false;
         SimInit init = new SimInit();
-        init.setNumRuns(1); // works only in batch mode
+        init.setNumRuns(100); // works only in batch mode
         init.loadModel(new SimulationLauncher(), null, BATCH_MODE);
     }
 
@@ -92,14 +92,28 @@ public class SimulationLauncher extends Repast3Launcher {
         buildSchedule();
         super.begin();
     }
+    public void setNumFirefighters(double numFirefighters) {
+        this.NumFirefighters = numFirefighters;
+    }
 
+    public double getNumFirefighters() {
+        return NumFirefighters;
+    }
+    public void setNumFires(double numFires) {
+        System.out.println("kmasd");
+        this.NumFires = numFires;
+    }
+
+    public double getNumFires() {
+        return NumFires;
+    }
     private void buildModel() {
         setEnvironment(new Object2DGrid(WORLD_WIDTH, WORLD_HEIGHT));
         setMapState(new MapState(this, WORLD_WIDTH, WORLD_HEIGHT));
     }
 
     private void buildSchedule() {
-        getSchedule().scheduleActionAtInterval(100, this, "simulationStep");
+        getSchedule().scheduleActionAtInterval(1, this, "simulationStep");
     }
 
     private void buildDisplay() {
@@ -131,7 +145,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private void launchFirefighters() throws StaleProxyException {
         List<Firefighter> firefighters = new ArrayList<>();
-        for (int i = 0; i < NUM_FIREFIGHTERS; i++) {
+        for (int i = 0; i < NumFirefighters; i++) {
             Firefighter ff = new Firefighter(this, 0, i);
             environment.putObjectAt(ff.getX(), ff.getY(), ff);
             mainContainer.acceptNewAgent("firefighter-" + i, ff).start();
@@ -178,8 +192,9 @@ public class SimulationLauncher extends Repast3Launcher {
 
     @Override
     public String[] getInitParam() {
+        System.out.println("sdj");
         return new String[] {
-                "numFirefighters, numFires"
+                "NumFirefighters", "NumFires"
         };
     }
 

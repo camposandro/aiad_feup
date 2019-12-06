@@ -156,11 +156,12 @@ public class MapCell implements Drawable, Serializable  {
     }
 
     public void setBurnedPercentage(int burnedPercentage) {
-        if (burnedPercentage < 0 || burnedPercentage > 100) {
+        if (burnedPercentage < 0) {
             return;
         }
-        else if(burnedPercentage > 100){
+        else if(burnedPercentage >= 100){
             this.burnedPercentage = 100;
+            System.out.println("another one");  // Insert a counter
             return;
         }
         this.burnedPercentage = burnedPercentage;
@@ -205,7 +206,7 @@ public class MapCell implements Drawable, Serializable  {
 
     public void update() {
         if (onFire) {
-            if (burnedPercentage == 100) {
+            if (burnedPercentage >= 100) {
                 onFire = false;
                 return;
             }
@@ -216,7 +217,7 @@ public class MapCell implements Drawable, Serializable  {
                     neighbours[i].catchFireProbability(fireProbability);
                 }
             }
-            setBurnedPercentage(burnedPercentage + 5 * (100- humidityPercentage)/100);
+            setBurnedPercentage(burnedPercentage + 5 * (100 - humidityPercentage)/100);
             setColor(calcColor());
         }
     }
