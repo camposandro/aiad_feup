@@ -21,14 +21,15 @@ import java.util.*;
 import java.util.List;
 
 public class SimulationLauncher extends Repast3Launcher {
+    public static boolean endSim = false;
     //-------------------------------------------WORLD SELECTION--------------------------------------------//
     public static int WORLD_WIDTH = 200;        // Recommended size = 200
     public static int WORLD_HEIGHT = 100;       // Recommended size = 100
 
     public static boolean RANDOMWORLD = false;
 
-    public static int MAX_NUM_FIRES = 5;
-    public static int NUM_FIREFIGHTERS = 7;
+    public static int MAX_NUM_FIRES = 2;
+    public static int NUM_FIREFIGHTERS = 2;
 
     public static int NUM_RIVERS = 1;
     public static int RIVER_MAX_WIDTH = 5;
@@ -182,6 +183,11 @@ public class SimulationLauncher extends Repast3Launcher {
         for (Firefighter f: firefighters) {
             environment.putObjectAt(f.getX(), f.getY(), f);
         }
+
+        if(endSim){
+            fireEndSim();
+        }
+
     }
 
     public void simulationStep() {
@@ -257,5 +263,9 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public void setMapState(MapState state) {
         this.mapState = state;
+    }
+
+    public static void setEndSim(Boolean end){
+        endSim = end;
     }
 }
