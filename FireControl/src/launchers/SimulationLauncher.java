@@ -184,13 +184,13 @@ public class SimulationLauncher extends Repast3Launcher {
             environment.putObjectAt(f.getX(), f.getY(), f);
         }
 
-        if(endSim){
-            fireEndSim();
-        }
-
     }
 
     public void simulationStep() {
+        if(endSim){
+            getSchedule().executeEndActions();
+            fireStopSim();
+        }
         updateEnvironment();
         updateAgents();
         displaySurface.updateDisplay();
