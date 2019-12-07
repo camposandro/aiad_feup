@@ -27,7 +27,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public static boolean RANDOMWORLD = false;
 
-    public static int MAX_NUM_FIRES = 2;
+    public static int NUM_FIRES = 3;
     public static int NUM_FIREFIGHTERS = 2;
 
     public static int NUM_RIVERS = 1;
@@ -42,8 +42,13 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public static int WORLD_UPDATE_RATE = 1000; // World update fixed rate
     public static int FF_UPDATE_RATE = 10;
-    
+
+    public static int VIEWING_DIST = 6;
+    public static int EXTINGUISHING_DIST = 2;
     public static int NUM_ROAMING_TURNS = 5;
+    public static int MAX_WATER_CAPACITY = 100;
+    public static int EXTINGUISH_PUMPING_VELOCITY = 4;
+    public static int REFILL_PUMPING_VELOCITY = EXTINGUISH_PUMPING_VELOCITY * 3;
     //-----------------------------------------------------------------------------------------------------//
     private Random rand;
 
@@ -61,7 +66,7 @@ public class SimulationLauncher extends Repast3Launcher {
     private MapState mapState;
 
     private double NumFirefighters = NUM_FIREFIGHTERS;
-    private double NumFires = MAX_NUM_FIRES;
+    private double NumFires = NUM_FIRES;
 
     private FireStation fireStation;
     private List<Firefighter> firefighters;

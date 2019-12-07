@@ -21,12 +21,13 @@ public class Firefighter extends MyAgent {
 
     private enum State {Waiting, Driving, Searching, Extinguishing, Refilling, Return}
 
-    private static int VIEWING_DIST = 6;
-    private static int EXTINGUISHING_DIST = 2;
+    private static int VIEWING_DIST = SimulationLauncher.VIEWING_DIST;
+    private static int EXTINGUISHING_DIST = SimulationLauncher.EXTINGUISHING_DIST;
+    private static int MAX_WATER_CAPACITY = SimulationLauncher.MAX_WATER_CAPACITY;
+    private static int EXTINGUISH_PUMPING_VELOCITY = SimulationLauncher.EXTINGUISH_PUMPING_VELOCITY;
+    private static int REFILL_PUMPING_VELOCITY = SimulationLauncher.REFILL_PUMPING_VELOCITY;
+
     private static int HEALTH_DAMAGE = 5;
-    private static int MAX_WATER_CAPACITY = 100;
-    private static int EXTINGUISH_PUMPING_VELOCITY = 4;
-    private static int REFILL_PUMPING_VELOCITY = EXTINGUISH_PUMPING_VELOCITY * 3;
 
     int water;
     int[] destination = new int[2];
