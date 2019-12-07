@@ -47,7 +47,8 @@ public class SimulationLauncher extends Repast3Launcher {
     //-----------------------------------------------------------------------------------------------------//
     private Random rand;
 
-    public static int numFFEnded = 0;
+    private static int numFFEnded = 0;
+    private static int totalBurnedArea = 0;
     public static boolean endSim = false;
 
     private ContainerController mainContainer;
@@ -103,7 +104,7 @@ public class SimulationLauncher extends Repast3Launcher {
         return NumFirefighters;
     }
     public void setNumFires(double numFires) {
-        System.out.println("kmasd");
+        System.out.println("SET NUMBER OF FIRES");
         this.NumFires = numFires;
     }
 
@@ -191,9 +192,8 @@ public class SimulationLauncher extends Repast3Launcher {
     public void simulationStep() {
         if(numFFEnded >= NUM_FIREFIGHTERS){
             getSchedule().executeEndActions();
-            fireStopSim();
+            stop();
         }
-        System.out.println(numFFEnded);
         updateEnvironment();
         updateAgents();
         displaySurface.updateDisplay();
@@ -201,7 +201,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     @Override
     public String[] getInitParam() {
-        System.out.println("sdj");
+        System.out.println("GETTING PARAMS");
         return new String[] {
                 "NumFirefighters", "NumFires"
         };
@@ -274,5 +274,13 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public static void setNumFFEnded(int ff){
         numFFEnded = ff;
+    }
+
+    public static int getTotalBurnedArea(){
+        return totalBurnedArea;
+    }
+
+    public static void setTotalBurnedArea(int tba){
+        totalBurnedArea = tba;
     }
 }

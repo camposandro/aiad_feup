@@ -1,5 +1,6 @@
 package agents;
 
+import launchers.SimulationLauncher;
 import uchicago.src.sim.gui.Drawable;
 import uchicago.src.sim.gui.SimGraphics;
 import utils.MapState;
@@ -100,6 +101,10 @@ public class MapCell implements Drawable, Serializable  {
             return;
         }
         if (soilType != SoilType.WATER && soilType != SoilType.ASPHALT && random <= probOfFire) {
+            int ba = SimulationLauncher.getTotalBurnedArea();
+            ba++;
+            SimulationLauncher.setTotalBurnedArea(ba);
+            System.out.println(SimulationLauncher.getTotalBurnedArea());
             this.onFire = true;
             setColor(this.calcColor());
             MapState.getFireCells().add(this);
