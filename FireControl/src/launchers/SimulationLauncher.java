@@ -21,7 +21,6 @@ import java.util.*;
 import java.util.List;
 
 public class SimulationLauncher extends Repast3Launcher {
-    public static boolean endSim = false;
     //-------------------------------------------WORLD SELECTION--------------------------------------------//
     public static int WORLD_WIDTH = 200;        // Recommended size = 200
     public static int WORLD_HEIGHT = 100;       // Recommended size = 100
@@ -47,6 +46,9 @@ public class SimulationLauncher extends Repast3Launcher {
     public static int NUM_ROAMING_TURNS = 5;
     //-----------------------------------------------------------------------------------------------------//
     private Random rand;
+
+    public static int numFFEnded = 0;
+    public static boolean endSim = false;
 
     private ContainerController mainContainer;
 
@@ -187,10 +189,11 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     public void simulationStep() {
-        if(endSim){
+        if(numFFEnded >= NUM_FIREFIGHTERS){
             getSchedule().executeEndActions();
             fireStopSim();
         }
+        System.out.println(numFFEnded);
         updateEnvironment();
         updateAgents();
         displaySurface.updateDisplay();
@@ -265,7 +268,11 @@ public class SimulationLauncher extends Repast3Launcher {
         this.mapState = state;
     }
 
-    public static void setEndSim(Boolean end){
-        endSim = end;
+    public static int getNumFFEnded(){
+        return numFFEnded;
+    }
+
+    public static void setNumFFEnded(int ff){
+        numFFEnded = ff;
     }
 }

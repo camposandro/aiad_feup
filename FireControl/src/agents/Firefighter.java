@@ -371,8 +371,9 @@ public class Firefighter extends MyAgent {
                 }
                 case Searching: {
                     if (numSearchingTurns == SimulationLauncher.NUM_ROAMING_TURNS) {
-
-                        SimulationLauncher.setEndSim(true);
+                        int nff = SimulationLauncher.getNumFFEnded();
+                        nff++;
+                        SimulationLauncher.setNumFFEnded(nff);
                         setDestination(0,0);
                         currentState = State.Return;
                     } else {
