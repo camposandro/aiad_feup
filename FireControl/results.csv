@@ -1,3 +1,1 @@
-
-198,3.0,2.0,4,4,100,6,2,1,5,1,12,1
-271,3.0,2.0,4,4,100,6,2,1,5,1,12,1
+totalBurnedArea,fireExt,NumFires,NumFireFighters,extinguishPumpingVelocity,refillPumpingVelocity,maxWaterCapacity,viewingDist,extinguishDist,numRivers,riverWidth,numLakes,lakeRadius,numVillages,totalNumHouses

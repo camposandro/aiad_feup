@@ -254,7 +254,7 @@ public class MapState {
         }
 
         for(int i = 0; i < numOfLakes; i++){
-            int lakeRadius = rand.nextInt(lakeMaximumRadius);
+            int lakeRadius = lakeMaximumRadius;//rand.nextInt(lakeMaximumRadius);
             int minX, maxX, minY, maxY;
             //lake center
             map[lakePositions[i][0]][lakePositions[i][1]].setVegetationDensity(0);
@@ -331,7 +331,7 @@ public class MapState {
         }
 
         for(int i = 0; i < numOfRivers; i++) {
-            int riverWidth = rand.nextInt(riverMaximumWidth) + 1;
+            int riverWidth = riverMaximumWidth; //rand.nextInt(riverMaximumWidth) + 1;
 
             //river position
             map[riverPositions[i][0]][riverPositions[i][1]].setVegetationDensity(0);
@@ -410,7 +410,7 @@ public class MapState {
                 i--;
             }
             else{
-                housesPerVillage[i] = rand.nextInt(maxHousesPerVillage - 8) + 8;
+                housesPerVillage[i] = maxHousesPerVillage;//rand.nextInt(maxHousesPerVillage - 8) + 8;
             }
         }
 

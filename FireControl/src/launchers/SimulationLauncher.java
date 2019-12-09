@@ -39,7 +39,7 @@ public class SimulationLauncher extends Repast3Launcher {
     public static int LAKE_MAX_RADIUS = 12;
 
     public static int NUM_VILLAGES = 1;
-    public static int VILLAGE_MAX_HOUSES = 64;
+    public static int VILLAGE_MAX_HOUSES = 32;
 
     public static int NUM_REMOTE_HOUSES = 2;
 
@@ -203,11 +203,6 @@ public class SimulationLauncher extends Repast3Launcher {
     public void simulationStep() throws IOException {
         if(numFFEnded >= NUM_FIREFIGHTERS){
             getSchedule().executeEndActions();
-            System.out.println(totalBurnedArea + "," + NumFires + "," + NumFireFighters + "," +
-                    EXTINGUISH_PUMPING_VELOCITY + "," + EXTINGUISH_PUMPING_VELOCITY + "," + MAX_WATER_CAPACITY +
-                    "," + VIEWING_DIST + "," + EXTINGUISHING_DIST + "," + NUM_RIVERS + "," + RIVER_MAX_WIDTH + ","
-                    + NUM_LAKES + "," + LAKE_MAX_RADIUS + "," + NUM_VILLAGES);
-
             writeDataToOutFile("results.csv");
             stop();
         }
@@ -217,15 +212,31 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     public void writeDataToOutFile(String fileName) throws IOException {
-        String str = totalBurnedArea + "," + NumFires + "," + NumFireFighters + "," +
-                EXTINGUISH_PUMPING_VELOCITY + "," + EXTINGUISH_PUMPING_VELOCITY + "," + MAX_WATER_CAPACITY +
+        int fireExt = 0;
+        int totalNumHouses = VILLAGE_MAX_HOUSES * NUM_VILLAGES + NUM_REMOTE_HOUSES;
+        if(isFireExtinguished()){
+            fireExt = 1;
+        }
+        String str = totalBurnedArea + "," + fireExt + "," + NUM_FIRES + "," + NUM_FIREFIGHTERS + "," +
+                EXTINGUISH_PUMPING_VELOCITY + "," + REFILL_PUMPING_VELOCITY + "," + MAX_WATER_CAPACITY +
                 "," + VIEWING_DIST + "," + EXTINGUISHING_DIST + "," + NUM_RIVERS + "," + RIVER_MAX_WIDTH + ","
-                + NUM_LAKES + "," + LAKE_MAX_RADIUS + "," + NUM_VILLAGES;
+                + NUM_LAKES + "," + LAKE_MAX_RADIUS + "," + NUM_VILLAGES + "," + totalNumHouses;
         BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
         writer.append('\n');
         writer.append(str);
 
         writer.close();
+    }
+
+    public Boolean isFireExtinguished(){
+        for(int i = 0; i < this.mapState.getGrid().length; i++){
+            for(int j = 0; j < this.mapState.getGrid()[0].length; j++){
+                if(this.mapState.getGrid()[i][j].isOnFire()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     @Override
