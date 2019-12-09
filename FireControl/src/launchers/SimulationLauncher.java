@@ -50,7 +50,7 @@ public class SimulationLauncher extends Repast3Launcher {
     public static int EXTINGUISHING_DIST = 2;
     public static int NUM_ROAMING_TURNS = 2;
     public static int MAX_WATER_CAPACITY = 100;
-    public static int EXTINGUISH_PUMPING_VELOCITY = 4;
+    public static int EXTINGUISH_PUMPING_VELOCITY = 1;
     public static int REFILL_PUMPING_VELOCITY = EXTINGUISH_PUMPING_VELOCITY * 3;
     //-----------------------------------------------------------------------------------------------------//
     private Random rand;
@@ -217,8 +217,8 @@ public class SimulationLauncher extends Repast3Launcher {
         if(isFireExtinguished()){
             fireExt = 1;
         }
-        String str = totalBurnedArea + "," + fireExt + "," + NUM_FIRES + "," + NUM_FIREFIGHTERS + "," +
-                EXTINGUISH_PUMPING_VELOCITY + "," + REFILL_PUMPING_VELOCITY + "," + MAX_WATER_CAPACITY +
+        String str = totalBurnedArea + "," + fireExt + "," + NUM_FIREFIGHTERS + "," + NUM_FIRES + "," +
+                EXTINGUISH_PUMPING_VELOCITY + "," + REFILL_PUMPING_VELOCITY + "," + MAX_WATER_CAPACITY + "," + NUM_ROAMING_TURNS +
                 "," + VIEWING_DIST + "," + EXTINGUISHING_DIST + "," + NUM_RIVERS + "," + RIVER_MAX_WIDTH + ","
                 + NUM_LAKES + "," + LAKE_MAX_RADIUS + "," + NUM_VILLAGES + "," + totalNumHouses;
         BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
