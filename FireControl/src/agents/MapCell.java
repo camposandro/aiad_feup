@@ -29,6 +29,7 @@ public class MapCell implements Drawable, Serializable  {
     private int burningRate = 0;
     private Color color;
     private int burningCoefficient = CELL_BURNING_COEFFICIENT;
+    private boolean hasBeenOnFire = false;
 
     public MapCell(int x, int y) {
         this.x = x;
@@ -46,6 +47,7 @@ public class MapCell implements Drawable, Serializable  {
         setBurnedPercentage(0);
         setColor(this.calcColor());
         setProbOfFire( humidityPercentage + (100 - vegetationDensity));
+        this.hasBeenOnFire = false;
     }
 
     public boolean isMoveable() {
@@ -101,11 +103,8 @@ public class MapCell implements Drawable, Serializable  {
             return;
         }
         if (soilType != SoilType.WATER && soilType != SoilType.ASPHALT && random <= probOfFire) {
-            int ba = SimulationLauncher.getTotalBurnedArea();
-            ba++;
-            SimulationLauncher.setTotalBurnedArea(ba);
-            System.out.println(SimulationLauncher.getTotalBurnedArea());
             this.onFire = true;
+            setHasBeenOnFire(true);
             setColor(this.calcColor());
             MapState.getFireCells().add(this);
         }
@@ -143,7 +142,7 @@ public class MapCell implements Drawable, Serializable  {
 
     public void setOnFire(boolean onFire) {
         this.onFire = onFire;
-            this.burningRate = 100;
+        this.burningRate = 100;
         setColor(this.calcColor());
     }
 
@@ -166,7 +165,6 @@ public class MapCell implements Drawable, Serializable  {
         }
         else if(burnedPercentage >= 100){
             this.burnedPercentage = 100;
-            System.out.println("another one");  // Insert a counter
             return;
         }
         this.burnedPercentage = burnedPercentage;
@@ -225,5 +223,20 @@ public class MapCell implements Drawable, Serializable  {
             setBurnedPercentage(burnedPercentage + 5 * (100 - humidityPercentage)/100);
             setColor(calcColor());
         }
+    }
+
+    public void setHasBeenOnFire(boolean hasBeenOnFire) {
+        if(!hasBeenOnFire)
+            return;
+        if(this.hasBeenOnFire)
+            return;
+        this.hasBeenOnFire = hasBeenOnFire;
+        int ba = SimulationLauncher.getTotalBurnedArea();
+        ba++;
+        SimulationLauncher.setTotalBurnedArea(ba);
+        //System.out.println(SimulationLauncher.getTotalBurnedArea());
+    }
+    public boolean getHasBeenOnFire(){
+        return this.hasBeenOnFire;
     }
 }

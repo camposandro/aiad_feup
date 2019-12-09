@@ -9,6 +9,7 @@ import jade.wrapper.StaleProxyException;
 import sajas.core.Runtime;
 import sajas.sim.repast3.Repast3Launcher;
 import sajas.wrapper.ContainerController;
+import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.engine.SimInit;
 import uchicago.src.sim.gui.DisplaySurface;
 import uchicago.src.sim.gui.Object2DDisplay;
@@ -45,7 +46,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public static int VIEWING_DIST = 6;
     public static int EXTINGUISHING_DIST = 2;
-    public static int NUM_ROAMING_TURNS = 5;
+    public static int NUM_ROAMING_TURNS = 2;
     public static int MAX_WATER_CAPACITY = 100;
     public static int EXTINGUISH_PUMPING_VELOCITY = 4;
     public static int REFILL_PUMPING_VELOCITY = EXTINGUISH_PUMPING_VELOCITY * 3;
@@ -65,11 +66,12 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private MapState mapState;
 
-    private double NumFirefighters = NUM_FIREFIGHTERS;
-    private double NumFires = NUM_FIRES;
+    private double NumFireFighters;
+    private double NumFires;
 
     private FireStation fireStation;
     private List<Firefighter> firefighters;
+
 
     public Map<AID, MyAgent> agents = new HashMap();
 
@@ -101,12 +103,13 @@ public class SimulationLauncher extends Repast3Launcher {
         buildSchedule();
         super.begin();
     }
-    public void setNumFirefighters(double numFirefighters) {
-        this.NumFirefighters = numFirefighters;
+    public void setNumFireFighters(double numFireFighters) {
+        System.out.println(numFireFighters);
+        this.NumFireFighters = numFireFighters;
     }
 
-    public double getNumFirefighters() {
-        return NumFirefighters;
+    public double getNumFireFighters() {
+        return NumFireFighters;
     }
     public void setNumFires(double numFires) {
         System.out.println("SET NUMBER OF FIRES");
@@ -117,6 +120,7 @@ public class SimulationLauncher extends Repast3Launcher {
         return NumFires;
     }
     private void buildModel() {
+        this.totalBurnedArea = 0;
         setEnvironment(new Object2DGrid(WORLD_WIDTH, WORLD_HEIGHT));
         setMapState(new MapState(this, WORLD_WIDTH, WORLD_HEIGHT));
     }
@@ -154,7 +158,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private void launchFirefighters() throws StaleProxyException {
         List<Firefighter> firefighters = new ArrayList<>();
-        for (int i = 0; i < NumFirefighters; i++) {
+        for (int i = 0; i < NumFireFighters; i++) {
             Firefighter ff = new Firefighter(this, 0, i);
             environment.putObjectAt(ff.getX(), ff.getY(), ff);
             mainContainer.acceptNewAgent("firefighter-" + i, ff).start();
@@ -197,6 +201,11 @@ public class SimulationLauncher extends Repast3Launcher {
     public void simulationStep() {
         if(numFFEnded >= NUM_FIREFIGHTERS){
             getSchedule().executeEndActions();
+            System.out.println(totalBurnedArea + "," + NumFires + "," + NumFireFighters + "," +
+                    EXTINGUISH_PUMPING_VELOCITY + "," + EXTINGUISH_PUMPING_VELOCITY + "," + MAX_WATER_CAPACITY +
+                    "," + VIEWING_DIST + "," + EXTINGUISHING_DIST + "," + NUM_RIVERS + "," + RIVER_MAX_WIDTH + ","
+                    + NUM_LAKES + "," + LAKE_MAX_RADIUS + "," + NUM_VILLAGES);
+
             stop();
         }
         updateEnvironment();
@@ -208,7 +217,7 @@ public class SimulationLauncher extends Repast3Launcher {
     public String[] getInitParam() {
         System.out.println("GETTING PARAMS");
         return new String[] {
-                "NumFirefighters", "NumFires"
+                "NumFireFighters", "NumFires"
         };
     }
 
