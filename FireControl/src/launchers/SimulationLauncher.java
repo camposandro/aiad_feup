@@ -17,6 +17,8 @@ import uchicago.src.sim.space.Object2DGrid;
 import utils.MapState;
 
 import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -66,8 +68,8 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private MapState mapState;
 
-    private double NumFireFighters;
-    private double NumFires;
+    private double NumFireFighters  = NUM_FIREFIGHTERS;
+    private double NumFires = NUM_FIRES;
 
     private FireStation fireStation;
     private List<Firefighter> firefighters;
@@ -198,7 +200,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     }
 
-    public void simulationStep() {
+    public void simulationStep() throws IOException {
         if(numFFEnded >= NUM_FIREFIGHTERS){
             getSchedule().executeEndActions();
             System.out.println(totalBurnedArea + "," + NumFires + "," + NumFireFighters + "," +
@@ -206,11 +208,24 @@ public class SimulationLauncher extends Repast3Launcher {
                     "," + VIEWING_DIST + "," + EXTINGUISHING_DIST + "," + NUM_RIVERS + "," + RIVER_MAX_WIDTH + ","
                     + NUM_LAKES + "," + LAKE_MAX_RADIUS + "," + NUM_VILLAGES);
 
+            writeDataToOutFile("results.csv");
             stop();
         }
         updateEnvironment();
         updateAgents();
         displaySurface.updateDisplay();
+    }
+
+    public void writeDataToOutFile(String fileName) throws IOException {
+        String str = totalBurnedArea + "," + NumFires + "," + NumFireFighters + "," +
+                EXTINGUISH_PUMPING_VELOCITY + "," + EXTINGUISH_PUMPING_VELOCITY + "," + MAX_WATER_CAPACITY +
+                "," + VIEWING_DIST + "," + EXTINGUISHING_DIST + "," + NUM_RIVERS + "," + RIVER_MAX_WIDTH + ","
+                + NUM_LAKES + "," + LAKE_MAX_RADIUS + "," + NUM_VILLAGES;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
+        writer.append('\n');
+        writer.append(str);
+
+        writer.close();
     }
 
     @Override
