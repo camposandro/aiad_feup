@@ -48,7 +48,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public static int VIEWING_DIST = 6;
     public static int EXTINGUISHING_DIST = 2;
-    public static int NUM_ROAMING_TURNS = 1;
+    public static int NUM_ROAMING_TURNS = 6;
     public static int MAX_WATER_CAPACITY = 100;
     public static int EXTINGUISH_PUMPING_VELOCITY = 1;
     public static int REFILL_PUMPING_VELOCITY = EXTINGUISH_PUMPING_VELOCITY * 3;
@@ -61,7 +61,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     private ContainerController mainContainer;
 
-    private DisplaySurface displaySurface;
+    //private DisplaySurface displaySurface;
     private Object2DGrid environment;
     private int envWidth = WORLD_WIDTH;
     private int envHeight = WORLD_HEIGHT;
@@ -90,19 +90,19 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public void setup() {
         super.setup();
-
+/*
         if (displaySurface != null)
             displaySurface.dispose();
-
+*/
         String displaySurfaceName = "Fire Control Environment";
 
-        setDisplaySurface(new DisplaySurface(this, displaySurfaceName));
-        registerDisplaySurface(displaySurfaceName, displaySurface);
+        //setDisplaySurface(new DisplaySurface(this, displaySurfaceName));
+        //registerDisplaySurface(displaySurfaceName, displaySurface);
     }
 
     public void begin() {
         buildModel();
-        buildDisplay();
+        //buildDisplay();
         buildSchedule();
         super.begin();
     }
@@ -135,9 +135,9 @@ public class SimulationLauncher extends Repast3Launcher {
     private void buildDisplay() {
         Object2DDisplay firefightersDisplay = new Object2DDisplay(environment);
         firefightersDisplay.setObjectList(firefighters);
-        displaySurface.addDisplayable(firefightersDisplay, "Show Firefighters");
-        displaySurface.setBackground(Color.WHITE);
-        displaySurface.display();
+        //displaySurface.addDisplayable(firefightersDisplay, "Show Firefighters");
+        //displaySurface.setBackground(Color.WHITE);
+        //displaySurface.display();
     }
 
     @Override
@@ -210,7 +210,7 @@ public class SimulationLauncher extends Repast3Launcher {
         }
         updateEnvironment();
         updateAgents();
-        displaySurface.updateDisplay();
+        //displaySurface.updateDisplay();
     }
 
     public void writeDataToOutFile(String fileName) throws IOException {
@@ -269,7 +269,7 @@ public class SimulationLauncher extends Repast3Launcher {
     public void setMainContainer(ContainerController mainContainer) {
         this.mainContainer = mainContainer;
     }
-
+/*
     public DisplaySurface getDisplaySurface() {
         return displaySurface;
     }
@@ -277,7 +277,7 @@ public class SimulationLauncher extends Repast3Launcher {
     public void setDisplaySurface(DisplaySurface displaySurface) {
         this.displaySurface = displaySurface;
     }
-
+*/
     public Object2DGrid getEnvironment() {
         return environment;
     }
