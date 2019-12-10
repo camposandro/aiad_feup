@@ -188,6 +188,10 @@ public class SimulationLauncher extends Repast3Launcher {
         for (int i = 0; i < firefighters.size(); i++) {
             Firefighter ff = firefighters.get(i);
             if (ff.getState().getHealth() <= 0) {
+                int nff = SimulationLauncher.getNumFFEnded();
+                nff++;
+                SimulationLauncher.setNumFFEnded(nff);
+                System.out.println(nff);
                 mainContainer.removeLocalAgent(ff);
                 agents.remove(ff.getAID(), ff);
             } else {
