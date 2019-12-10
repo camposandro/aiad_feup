@@ -95,6 +95,7 @@ public class SimulationLauncher extends Repast3Launcher {
             displaySurface.dispose();
 
         String displaySurfaceName = "Fire Control Environment";
+
         setDisplaySurface(new DisplaySurface(this, displaySurfaceName));
         registerDisplaySurface(displaySurfaceName, displaySurface);
     }
@@ -201,9 +202,10 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     public void simulationStep() throws IOException {
-        if(numFFEnded >= NUM_FIREFIGHTERS){
+        if(numFFEnded >= getNumFireFighters()){
             getSchedule().executeEndActions();
             writeDataToOutFile("results.csv");
+            numFFEnded = 0;
             stop();
         }
         updateEnvironment();
@@ -217,7 +219,7 @@ public class SimulationLauncher extends Repast3Launcher {
         if(isFireExtinguished()){
             fireExt = 1;
         }
-        String str = totalBurnedArea + "," + fireExt + "," + NUM_FIREFIGHTERS + "," + NUM_FIRES + "," +
+        String str = totalBurnedArea + "," + fireExt + "," + NumFireFighters + "," + NumFires + "," +
                 EXTINGUISH_PUMPING_VELOCITY + "," + REFILL_PUMPING_VELOCITY + "," + MAX_WATER_CAPACITY + "," + NUM_ROAMING_TURNS +
                 "," + VIEWING_DIST + "," + EXTINGUISHING_DIST + "," + NUM_RIVERS + "," + RIVER_MAX_WIDTH + ","
                 + NUM_LAKES + "," + LAKE_MAX_RADIUS + "," + NUM_VILLAGES + "," + totalNumHouses;
