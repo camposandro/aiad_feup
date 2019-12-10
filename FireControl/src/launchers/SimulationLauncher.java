@@ -30,8 +30,8 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public static boolean RANDOMWORLD = false;
 
-    public static int NUM_FIRES = 3;
-    public static int NUM_FIREFIGHTERS = 2;
+    public static int NUM_FIRES = 2;
+    public static int NUM_FIREFIGHTERS = 4;
 
     public static int NUM_RIVERS = 1;
     public static int RIVER_MAX_WIDTH = 5;
@@ -48,7 +48,7 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public static int VIEWING_DIST = 6;
     public static int EXTINGUISHING_DIST = 2;
-    public static int NUM_ROAMING_TURNS = 2;
+    public static int NUM_ROAMING_TURNS = 1;
     public static int MAX_WATER_CAPACITY = 100;
     public static int EXTINGUISH_PUMPING_VELOCITY = 1;
     public static int REFILL_PUMPING_VELOCITY = EXTINGUISH_PUMPING_VELOCITY * 3;

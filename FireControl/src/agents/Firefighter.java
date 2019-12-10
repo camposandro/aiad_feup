@@ -42,6 +42,8 @@ public class Firefighter extends MyAgent {
 
     private State currentState;
 
+    private Boolean hasEnded = false;
+
     //private final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
     private ParallelBehaviour behaviour;
@@ -372,11 +374,9 @@ public class Firefighter extends MyAgent {
                 }
                 case Searching: {
                     if (numSearchingTurns == SimulationLauncher.NUM_ROAMING_TURNS) {
-                        int nff = SimulationLauncher.getNumFFEnded();
-                        nff++;
-                        SimulationLauncher.setNumFFEnded(nff);
                         setDestination(0,0);
                         currentState = State.Return;
+
                     } else {
                         if (!fires.isEmpty()) {
                             currentState = State.Extinguishing;
@@ -430,6 +430,13 @@ public class Firefighter extends MyAgent {
                     break;
                 }
                 case Return: {
+                    if(!hasEnded && getX() == 0 && getY() == 0){
+                        int nff = SimulationLauncher.getNumFFEnded();
+                        nff++;
+                        SimulationLauncher.setNumFFEnded(nff);
+                        System.out.println(nff);
+                        hasEnded = true;
+                    }
                     move();
                     break;
                 }
