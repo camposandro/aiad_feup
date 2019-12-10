@@ -9,14 +9,11 @@ import jade.wrapper.StaleProxyException;
 import sajas.core.Runtime;
 import sajas.sim.repast3.Repast3Launcher;
 import sajas.wrapper.ContainerController;
-import uchicago.src.sim.engine.BasicAction;
 import uchicago.src.sim.engine.SimInit;
-import uchicago.src.sim.gui.DisplaySurface;
 import uchicago.src.sim.gui.Object2DDisplay;
 import uchicago.src.sim.space.Object2DGrid;
 import utils.MapState;
 
-import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -33,23 +30,23 @@ public class SimulationLauncher extends Repast3Launcher {
     public static int NUM_FIRES = 2;
     public static int NUM_FIREFIGHTERS = 4;
 
-    public static int NUM_RIVERS = 1;
-    public static int RIVER_MAX_WIDTH = 5;
-    public static int NUM_LAKES = 1;
-    public static int LAKE_MAX_RADIUS = 12;
+    public static double NumRivers = 1;
+    public static double RiverWidth = 5;
+    public static double NumLakes = 1;
+    public static double LakeRadius = 12;
 
-    public static int NUM_VILLAGES = 1;
-    public static int VILLAGE_MAX_HOUSES = 32;
+    public static double NumVillages = 1;
+    public static double TotalNumHouses = 32;
 
     public static int NUM_REMOTE_HOUSES = 2;
 
     public static int WORLD_UPDATE_RATE = 1000; // World update fixed rate
     public static int FF_UPDATE_RATE = 10;
 
-    public static int VIEWING_DIST = 6;
-    public static int EXTINGUISHING_DIST = 2;
+    public static double ViewingDist = 6;
+    public static double ExtinguishingDist = 2;
     public static int NUM_ROAMING_TURNS = 6;
-    public static int MAX_WATER_CAPACITY = 100;
+    public static double MaxWaterCapacity = 100;
     public static int EXTINGUISH_PUMPING_VELOCITY = 1;
     public static int REFILL_PUMPING_VELOCITY = EXTINGUISH_PUMPING_VELOCITY * 3;
     //-----------------------------------------------------------------------------------------------------//
@@ -119,9 +116,82 @@ public class SimulationLauncher extends Repast3Launcher {
         this.NumFires = numFires;
     }
 
+    public static double getMaxWaterCapacity() {
+        return MaxWaterCapacity;
+    }
+
+    public static void setMaxWaterCapacity(double maxWaterCapacity) {
+        MaxWaterCapacity = maxWaterCapacity;
+    }
+
     public double getNumFires() {
         return NumFires;
     }
+
+    public static double getLakeRadius() {
+        return LakeRadius;
+    }
+
+    public static void setLakeRadius(double lakeRadius) {
+        LakeRadius = lakeRadius;
+    }
+
+    public static double getNumLakes() {
+        return NumLakes;
+    }
+
+    public static void setNumLakes(double numLakes) {
+        NumLakes = numLakes;
+    }
+
+    public static double getNumRivers() {
+        return NumRivers;
+    }
+
+    public static void setNumRivers(double numRivers) {
+        NumRivers = numRivers;
+    }
+
+    public static double getExtinguishingDist() {
+        return ExtinguishingDist;
+    }
+
+    public static void setExtinguishingDist(double extinguishingDist) {
+        ExtinguishingDist = extinguishingDist;
+    }
+
+    public static double getNumVillages() {
+        return NumVillages;
+    }
+
+    public static void setNumVillages(double numVillages) {
+        NumVillages = numVillages;
+    }
+
+    public static double getRiverWidth() {
+        return RiverWidth;
+    }
+
+    public static void setRiverWidth(double riverWidth) {
+        RiverWidth = riverWidth;
+    }
+
+    public static double getTotalNumHouses() {
+        return TotalNumHouses;
+    }
+
+    public static void setTotalNumHouses(double totalNumHouses) {
+        TotalNumHouses = totalNumHouses;
+    }
+
+    public static double getViewingDist() {
+        return ViewingDist;
+    }
+
+    public static void setViewingDist(double viewingDist) {
+        ViewingDist = viewingDist;
+    }
+
     private void buildModel() {
         this.totalBurnedArea = 0;
         setEnvironment(new Object2DGrid(WORLD_WIDTH, WORLD_HEIGHT));
@@ -191,7 +261,7 @@ public class SimulationLauncher extends Repast3Launcher {
                 int nff = SimulationLauncher.getNumFFEnded();
                 nff++;
                 SimulationLauncher.setNumFFEnded(nff);
-                System.out.println(nff);
+                System.out.println("rip in peace");
                 mainContainer.removeLocalAgent(ff);
                 agents.remove(ff.getAID(), ff);
             } else {
@@ -219,14 +289,14 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public void writeDataToOutFile(String fileName) throws IOException {
         int fireExt = 0;
-        int totalNumHouses = VILLAGE_MAX_HOUSES * NUM_VILLAGES + NUM_REMOTE_HOUSES;
+        double totalNumHouses = TotalNumHouses * NumVillages + NUM_REMOTE_HOUSES;
         if(isFireExtinguished()){
             fireExt = 1;
         }
         String str = totalBurnedArea + "," + fireExt + "," + NumFireFighters + "," + NumFires + "," +
-                EXTINGUISH_PUMPING_VELOCITY + "," + REFILL_PUMPING_VELOCITY + "," + MAX_WATER_CAPACITY + "," + NUM_ROAMING_TURNS +
-                "," + VIEWING_DIST + "," + EXTINGUISHING_DIST + "," + NUM_RIVERS + "," + RIVER_MAX_WIDTH + ","
-                + NUM_LAKES + "," + LAKE_MAX_RADIUS + "," + NUM_VILLAGES + "," + totalNumHouses;
+                EXTINGUISH_PUMPING_VELOCITY + "," + REFILL_PUMPING_VELOCITY + "," + MaxWaterCapacity + "," + NUM_ROAMING_TURNS +
+                "," + ViewingDist + "," + ExtinguishingDist + "," + NumRivers + "," + RiverWidth + ","
+                + NumLakes + "," + LakeRadius + "," + NumVillages + "," + totalNumHouses;
         BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
         writer.append('\n');
         writer.append(str);
@@ -249,7 +319,8 @@ public class SimulationLauncher extends Repast3Launcher {
     public String[] getInitParam() {
         System.out.println("GETTING PARAMS");
         return new String[] {
-                "NumFireFighters", "NumFires"
+                "NumFireFighters", "NumFires","MaxWaterCapacity", "ViewingDist", "ExtinguishingDist",
+                "NumRivers", "RiverWidth","LakeRadius", "NumVillages", "TotalNumHouses", "NumLakes"
         };
     }
 

@@ -10,9 +10,6 @@ import utils.MapState;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -21,15 +18,15 @@ public class Firefighter extends MyAgent {
 
     private enum State {Waiting, Driving, Searching, Extinguishing, Refilling, Return}
 
-    private static int VIEWING_DIST = SimulationLauncher.VIEWING_DIST;
-    private static int EXTINGUISHING_DIST = SimulationLauncher.EXTINGUISHING_DIST;
-    private static int MAX_WATER_CAPACITY = SimulationLauncher.MAX_WATER_CAPACITY;
+    private static double VIEWING_DIST = SimulationLauncher.ViewingDist;
+    private static double EXTINGUISHING_DIST = SimulationLauncher.ExtinguishingDist;
+    private static double MAX_WATER_CAPACITY = SimulationLauncher.MaxWaterCapacity;
     private static int EXTINGUISH_PUMPING_VELOCITY = SimulationLauncher.EXTINGUISH_PUMPING_VELOCITY;
     private static int REFILL_PUMPING_VELOCITY = SimulationLauncher.REFILL_PUMPING_VELOCITY;
 
     private static int HEALTH_DAMAGE = 5;
 
-    int water;
+    double water;
     int[] destination = new int[2];
     int[] lastFireDest = new int[2];
 
@@ -51,7 +48,7 @@ public class Firefighter extends MyAgent {
     public Firefighter(SimulationLauncher launcher, int x, int y) {
         super(launcher, x, y);
 
-        perception = new MapCell[VIEWING_DIST * 2 + 1][VIEWING_DIST * 2 + 1];
+        perception = new MapCell[(int)VIEWING_DIST * 2 + 1][(int)VIEWING_DIST * 2 + 1];
         fires = new HashSet<>();
         firesToExtinguish = new HashSet<>();
 
@@ -315,8 +312,8 @@ public class Firefighter extends MyAgent {
             clearFires();
             for (int i = 0; i < VIEWING_DIST * 2 + 1; i++) {
                 for (int j = 0; j < VIEWING_DIST * 2 + 1; j++) {
-                    int cellX = state.getX() - VIEWING_DIST + i;
-                    int cellY = state.getY() -   VIEWING_DIST + j;
+                    int cellX = state.getX() - (int)VIEWING_DIST + i;
+                    int cellY = state.getY() -   (int)VIEWING_DIST + j;
                     MapCell cell = MapState.getGridPos(cellX, cellY);
                     processCell(i, j, cell);
                 }

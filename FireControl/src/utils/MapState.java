@@ -237,13 +237,13 @@ public class MapState {
 
     public MapCell[][] generateLakes(MapCell[][] map){
         Random rand = new Random();
-        int numOfLakes = SimulationLauncher.NUM_LAKES;
+        double numOfLakes = SimulationLauncher.NumLakes;
         if(SimulationLauncher.RANDOMWORLD && map.length * map[0].length > 5000)
             numOfLakes = (int)Math.sqrt(rand.nextInt(map.length * map[0].length / 5000));
 
-        int lakeMaximumRadius = SimulationLauncher.LAKE_MAX_RADIUS;
+        double lakeMaximumRadius = SimulationLauncher.LakeRadius;
 
-        int[][] lakePositions = new int[numOfLakes][2];
+        int[][] lakePositions = new int[(int)numOfLakes][2];
 
         for(int i = 0; i < numOfLakes; i++){
             int lakeX = rand.nextInt(map.length);
@@ -254,8 +254,8 @@ public class MapState {
         }
 
         for(int i = 0; i < numOfLakes; i++){
-            int lakeRadius = lakeMaximumRadius;//rand.nextInt(lakeMaximumRadius);
-            int minX, maxX, minY, maxY;
+            double lakeRadius = lakeMaximumRadius;//rand.nextInt(lakeMaximumRadius);
+            double minX, maxX, minY, maxY;
             //lake center
             map[lakePositions[i][0]][lakePositions[i][1]].setVegetationDensity(0);
             map[lakePositions[i][0]][lakePositions[i][1]].setHumidityPercentage(100);
@@ -289,8 +289,8 @@ public class MapState {
             }
 
 
-            for(int m = minX; m < maxX; m++){
-                for(int n = minY; n < maxY; n++){
+            for(int m = (int)minX; m < maxX; m++){
+                for(int n = (int)minY; n < maxY; n++){
                     if(calculateDist(lakePositions[i][0], lakePositions[i][1], m, n) < lakeRadius/2){//perto do centro
                         if(m >= 0 && n >= 0 && m < map.length && n < map[0].length){
                             map[m][n].setVegetationDensity(0);
@@ -299,7 +299,7 @@ public class MapState {
                         }
                     }
                     else{
-                        int r = rand.nextInt(lakeRadius);
+                        int r = rand.nextInt((int)lakeRadius);
                         if(calculateDist(lakePositions[i][0], lakePositions[i][1], m, n) < r && m >= 0 && n >= 0 && m < map.length && n < map[0].length){
                             map[m][n].setVegetationDensity(0);
                             map[m][n].setHumidityPercentage(100);
@@ -315,12 +315,12 @@ public class MapState {
 
     public MapCell[][] generateRivers(MapCell[][] map){
         Random rand = new Random();
-        int numOfRivers = SimulationLauncher.NUM_RIVERS;
+        double numOfRivers = SimulationLauncher.NumRivers;
         if(SimulationLauncher.RANDOMWORLD && map.length * map[0].length > 10000)
             numOfRivers = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 10000));
-        int riverMaximumWidth = SimulationLauncher.RIVER_MAX_WIDTH;
+        double riverMaximumWidth = SimulationLauncher.RiverWidth;
 
-        int[][] riverPositions = new int[numOfRivers][2];
+        int[][] riverPositions = new int[(int)numOfRivers][2];
 
         for(int i = 0; i < numOfRivers; i++){
             int riverX = rand.nextInt(map.length);
@@ -331,7 +331,7 @@ public class MapState {
         }
 
         for(int i = 0; i < numOfRivers; i++) {
-            int riverWidth = riverMaximumWidth; //rand.nextInt(riverMaximumWidth) + 1;
+            double riverWidth = riverMaximumWidth; //rand.nextInt(riverMaximumWidth) + 1;
 
             //river position
             map[riverPositions[i][0]][riverPositions[i][1]].setVegetationDensity(0);
@@ -339,15 +339,15 @@ public class MapState {
             map[riverPositions[i][0]][riverPositions[i][1]].setSoilType(MapCell.SoilType.WATER);
 
             //river generation
-            int riverMinX = riverPositions[i][0] - (riverWidth - 1)/2;
-            int riverMaxX = riverPositions[i][0] + riverWidth/2;
+            double riverMinX = riverPositions[i][0] - (riverWidth - 1)/2;
+            double riverMaxX = riverPositions[i][0] + riverWidth/2;
             riverPositions[i][1] = map[0].length - 1;
 
             int deviation = 0;
             int riverOrientation = rand.nextInt(3);
 
             for(int n = riverPositions[i][1]; n >= 0; n--){
-                for(int m = riverMinX; m <= riverMaxX; m++){
+                for(int m = (int)riverMinX; m <= riverMaxX; m++){
                     if(m + deviation >= 0 && n >= 0 && m + deviation < map.length && n < map[0].length){
                         map[m + deviation][n].setVegetationDensity(0);
                         map[m + deviation][n].setHumidityPercentage(100);
@@ -356,17 +356,17 @@ public class MapState {
 
                 }
                 if(riverWidth == 1){
-                    deviation += rand.nextInt(riverWidth + 2) - riverWidth;
+                    deviation += rand.nextInt((int)riverWidth + 2) - riverWidth;
                 }
                 else{
                     if(riverOrientation == 0){// NW/SE
-                        deviation += rand.nextInt(riverWidth + 1) - riverWidth/2 - 1;
+                        deviation += rand.nextInt((int)riverWidth + 1) - riverWidth/2 - 1;
                     }
                     else if(riverOrientation == 2){// NE/SW
-                        deviation += rand.nextInt(riverWidth + 1) - riverWidth/2 + 1;
+                        deviation += rand.nextInt((int)riverWidth + 1) - riverWidth/2 + 1;
                     }
                     else{
-                        deviation += rand.nextInt(riverWidth + 1) - riverWidth/2;
+                        deviation += rand.nextInt((int)riverWidth + 1) - riverWidth/2;
                     }
                 }
             }
@@ -383,25 +383,25 @@ public class MapState {
 
     public MapCell[][] generateVillages(MapCell[][] map){
         Random rand = new Random();
-        int numOfVillages = SimulationLauncher.NUM_VILLAGES;
+        double numOfVillages = SimulationLauncher.NumVillages;
         if(SimulationLauncher.RANDOMWORLD && map.length * map[0].length > 5000)
             numOfVillages = (int)Math.cbrt(rand.nextInt(map.length * map[0].length / 5000));
 
-        int maxHousesPerVillage;
+        double maxHousesPerVillage;
         if(SimulationLauncher.RANDOMWORLD){
             maxHousesPerVillage = 32;
         }
         else{
-            maxHousesPerVillage = SimulationLauncher.VILLAGE_MAX_HOUSES;
+            maxHousesPerVillage = SimulationLauncher.TotalNumHouses;
         }
 
-        int[] housesPerVillage = new int[numOfVillages];
+        int[] housesPerVillage = new int[(int)numOfVillages];
 
-        int[][] villagePositions = new int[numOfVillages][2];
+        int[][] villagePositions = new int[(int)numOfVillages][2];
 
         for(int i = 0; i < numOfVillages; i++){
-            int villageX = rand.nextInt(map.length - maxHousesPerVillage) + maxHousesPerVillage/2;
-            int villageY = rand.nextInt(map[0].length - maxHousesPerVillage) + maxHousesPerVillage/2;
+            int villageX = rand.nextInt((int)(map.length - maxHousesPerVillage)) + (int)maxHousesPerVillage/2;
+            int villageY = rand.nextInt((int)(map[0].length - maxHousesPerVillage)) + (int)maxHousesPerVillage/2;
 
             villagePositions[i][0] = villageX;
             villagePositions[i][1] = villageY;
@@ -410,7 +410,7 @@ public class MapState {
                 i--;
             }
             else{
-                housesPerVillage[i] = maxHousesPerVillage;//rand.nextInt(maxHousesPerVillage - 8) + 8;
+                housesPerVillage[i] = (int)maxHousesPerVillage;//rand.nextInt(maxHousesPerVillage - 8) + 8;
             }
         }
 

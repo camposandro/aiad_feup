@@ -1,12 +1,62 @@
 runs: 1
 NumFireFighters {
  start: 2.0
- end: 10.0
+ end: 3.0
+ incr: 1.0
+ {
+  runs: 1
+   NumFires {
+    start: 1.0
+    end: 3.0
+    incr: 1.0
+   }
+  }
+ }
+
+MaxWaterCapacity {
+ start: 5.0
+ end: 25.0
+ incr: 5.0
+}
+ViewingDist {
+ start: 3.0
+ end: 9.0
+ incr: 2.0
+}
+ExtinguishingDist {
+ start: 1.0
+ end: 3.0
  incr: 1.0
 }
 
-NumFires {
+NumRivers {
+ start: 0.0
+ end: 3.0
+ incr: 1.0
+}
+RiverWidth {
  start: 1.0
- end: 10.0
+ end: 5.0
+ incr: 4.0
+}
+LakeRadius {
+ start: 1.0
+ end: 5.0
+ incr: 2.0
+}
+NumVillages {
+ start: 0.0
+ end: 1.0
+ incr: 1.0
+}
+
+TotalNumHouses {
+ start: 16.0
+ end: 64.0
+ incr: 16.0
+}
+NumLakes {
+ start: 0.0
+ end: 3.0
  incr: 1.0
 }
