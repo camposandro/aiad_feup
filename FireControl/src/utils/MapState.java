@@ -14,6 +14,7 @@ public class MapState {
 
     public static int envWidth;
     public static int envHeight;
+    public boolean firstRun = true;
 
     private static List<MapCell> fires = new ArrayList<>();
 
@@ -23,6 +24,8 @@ public class MapState {
     private final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
     public MapState(SimulationLauncher launcher, int envWidth, int envHeight) {
+        fires.clear();
+        fireCell.clear();
         this.envWidth = envWidth;
         this.envHeight = envHeight;
 
@@ -40,18 +43,20 @@ public class MapState {
         }
 
         this.grid = createMapState(launcher,envWidth,envHeight);
-
-        // Schedule world update
-        service.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                HashSet<MapCell> fireCells = MapState.getFireCells();
-                HashSet<MapCell> a = (HashSet) fireCells.clone();
-                Iterator<MapCell> i = a.iterator();
-                while (i.hasNext())
-                    i.next().update();
-            }
-        }, 0, SimulationLauncher.WORLD_UPDATE_RATE, TimeUnit.MILLISECONDS);
+        if(firstRun) {
+            firstRun = false;
+            // Schedule world update
+            service.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    HashSet<MapCell> fireCells = MapState.getFireCells();
+                    HashSet<MapCell> a = (HashSet) fireCells.clone();
+                    Iterator<MapCell> i = a.iterator();
+                    while (i.hasNext())
+                        i.next().update();
+                }
+            }, 0, SimulationLauncher.WORLD_UPDATE_RATE, TimeUnit.MILLISECONDS);
+        }
     }
 
     public MapCell[][] getGrid() {

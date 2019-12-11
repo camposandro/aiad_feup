@@ -19,6 +19,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SimulationLauncher extends Repast3Launcher {
     //-------------------------------------------WORLD SELECTION--------------------------------------------//
@@ -79,10 +80,12 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     public static void main(String[] args) throws IOException {
-        boolean BATCH_MODE = false;
+        boolean BATCH_MODE = true;
         SimInit init = new SimInit();
         init.setNumRuns(100); // works only in batch mode
-        init.loadModel(new SimulationLauncher(), null, BATCH_MODE);
+        init.loadModel(new SimulationLauncher(), "Parameters.txt", BATCH_MODE);
+
+
     }
 
     public void setup() {
@@ -112,6 +115,20 @@ public class SimulationLauncher extends Repast3Launcher {
         return NumFireFighters;
     }
     public void setNumFires(double numFires) {
+
+        setNumRivers(ThreadLocalRandom.current().nextInt(0, 6));
+        setRiverWidth(ThreadLocalRandom.current().nextInt(1, 6));
+        setNumLakes(ThreadLocalRandom.current().nextInt(0, 6));
+        setLakeRadius(ThreadLocalRandom.current().nextInt(1, 6));
+        setNumVillages(ThreadLocalRandom.current().nextInt(0, 2));
+        setTotalNumHouses(ThreadLocalRandom.current().nextInt(8, 33));
+
+        System.out.println(NumRivers);
+        System.out.println(RiverWidth);
+        System.out.println(NumLakes);
+        System.out.println(LakeRadius);
+        System.out.println(NumVillages);
+        System.out.println(TotalNumHouses);
         System.out.println("SET NUMBER OF FIRES");
         this.NumFires = numFires;
     }
@@ -193,6 +210,7 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     private void buildModel() {
+
         this.totalBurnedArea = 0;
         setEnvironment(new Object2DGrid(WORLD_WIDTH, WORLD_HEIGHT));
         setMapState(new MapState(this, WORLD_WIDTH, WORLD_HEIGHT));
@@ -319,8 +337,7 @@ public class SimulationLauncher extends Repast3Launcher {
     public String[] getInitParam() {
         System.out.println("GETTING PARAMS");
         return new String[] {
-                "NumFireFighters", "NumFires","MaxWaterCapacity", "ViewingDist", "ExtinguishingDist",
-                "NumRivers", "RiverWidth","LakeRadius", "NumVillages", "TotalNumHouses", "NumLakes"
+                "NumFireFighters", "NumFires","MaxWaterCapacity", "ViewingDist", "ExtinguishingDist"
         };
     }
 
