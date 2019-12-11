@@ -1,6 +1,5 @@
 package agents;
 
-import launchers.SimulationLauncher;
 import uchicago.src.sim.gui.Drawable;
 import uchicago.src.sim.gui.SimGraphics;
 import utils.MapState;
@@ -47,7 +46,6 @@ public class MapCell implements Drawable, Serializable  {
         setBurnedPercentage(0);
         setColor(this.calcColor());
         setProbOfFire( humidityPercentage + (100 - vegetationDensity));
-        this.hasBeenOnFire = false;
     }
 
     public boolean isMoveable() {
@@ -104,7 +102,6 @@ public class MapCell implements Drawable, Serializable  {
         }
         if (soilType != SoilType.WATER && soilType != SoilType.ASPHALT && random <= probOfFire) {
             this.onFire = true;
-            setHasBeenOnFire(true);
             setColor(this.calcColor());
             MapState.getFireCells().add(this);
         }
@@ -223,20 +220,5 @@ public class MapCell implements Drawable, Serializable  {
             setBurnedPercentage(burnedPercentage + 5 * (100 - humidityPercentage)/100);
             setColor(calcColor());
         }
-    }
-
-    public void setHasBeenOnFire(boolean hasBeenOnFire) {
-        if(!hasBeenOnFire)
-            return;
-        if(this.hasBeenOnFire)
-            return;
-        this.hasBeenOnFire = hasBeenOnFire;
-        int ba = SimulationLauncher.getTotalBurnedArea();
-        ba++;
-        SimulationLauncher.setTotalBurnedArea(ba);
-        //System.out.println(SimulationLauncher.getTotalBurnedArea());
-    }
-    public boolean getHasBeenOnFire(){
-        return this.hasBeenOnFire;
     }
 }

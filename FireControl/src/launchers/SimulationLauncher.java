@@ -15,6 +15,7 @@ import uchicago.src.sim.space.Object2DGrid;
 import utils.MapState;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -54,7 +55,6 @@ public class SimulationLauncher extends Repast3Launcher {
     private Random rand;
 
     private static int numFFEnded = 0;
-    private static int totalBurnedArea = 0;
     public static boolean endSim = false;
 
     private ContainerController mainContainer;
@@ -83,7 +83,7 @@ public class SimulationLauncher extends Repast3Launcher {
         boolean BATCH_MODE = true;
         SimInit init = new SimInit();
         init.setNumRuns(100); // works only in batch mode
-        init.loadModel(new SimulationLauncher(), "Parameters.txt", BATCH_MODE);
+        init.loadModel(new SimulationLauncher(), "FireControl/Parameters.txt", BATCH_MODE);
 
 
     }
@@ -210,8 +210,6 @@ public class SimulationLauncher extends Repast3Launcher {
     }
 
     private void buildModel() {
-
-        this.totalBurnedArea = 0;
         setEnvironment(new Object2DGrid(WORLD_WIDTH, WORLD_HEIGHT));
         setMapState(new MapState(this, WORLD_WIDTH, WORLD_HEIGHT));
     }
@@ -296,7 +294,7 @@ public class SimulationLauncher extends Repast3Launcher {
     public void simulationStep() throws IOException {
         if(numFFEnded >= getNumFireFighters()){
             getSchedule().executeEndActions();
-            writeDataToOutFile("results.csv");
+            writeDataToOutFile("results1.csv");
             numFFEnded = 0;
             stop();
         }
@@ -311,11 +309,15 @@ public class SimulationLauncher extends Repast3Launcher {
         if(isFireExtinguished()){
             fireExt = 1;
         }
-        String str = totalBurnedArea + "," + fireExt + "," + NumFireFighters + "," + NumFires + "," +
+        String str = MapState.getFireCells().size() + "," + fireExt + "," + MapState.AVG_DIST_FIRES + "," + NumFireFighters + "," + NumFires + "," +
                 EXTINGUISH_PUMPING_VELOCITY + "," + REFILL_PUMPING_VELOCITY + "," + MaxWaterCapacity + "," + NUM_ROAMING_TURNS +
                 "," + ViewingDist + "," + ExtinguishingDist + "," + NumRivers + "," + RiverWidth + ","
                 + NumLakes + "," + LakeRadius + "," + NumVillages + "," + totalNumHouses;
         BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
+        if (MapState.firstRun && new File(fileName).length() == 0) {
+            writer.append("totalBurnedArea,fireExt,avgDistFires,numFireFighters,numFires,extinguishPumpingVelocity,refillPumpingVelocity,maxWaterCapacity,numRoamingTurns,viewingDist,extinguishDist,numRivers,riverWidth,numLakes,lakeRadius,numVillages,totalNumHouses");
+            MapState.firstRun = false;
+        }
         writer.append('\n');
         writer.append(str);
 
@@ -408,13 +410,5 @@ public class SimulationLauncher extends Repast3Launcher {
 
     public static void setNumFFEnded(int ff){
         numFFEnded = ff;
-    }
-
-    public static int getTotalBurnedArea(){
-        return totalBurnedArea;
-    }
-
-    public static void setTotalBurnedArea(int tba){
-        totalBurnedArea = tba;
     }
 }

@@ -14,7 +14,9 @@ public class MapState {
 
     public static int envWidth;
     public static int envHeight;
-    public boolean firstRun = true;
+    public static boolean firstRun = true;
+
+    public static double AVG_DIST_FIRES = 0;
 
     private static List<MapCell> fires = new ArrayList<>();
 
@@ -26,6 +28,8 @@ public class MapState {
     public MapState(SimulationLauncher launcher, int envWidth, int envHeight) {
         fires.clear();
         fireCell.clear();
+        AVG_DIST_FIRES = 0;
+
         this.envWidth = envWidth;
         this.envHeight = envHeight;
 
@@ -43,8 +47,11 @@ public class MapState {
         }
 
         this.grid = createMapState(launcher,envWidth,envHeight);
+
+        fireCell.forEach(fc -> AVG_DIST_FIRES += fc.getX() + fc.getY());
+        AVG_DIST_FIRES = AVG_DIST_FIRES / fireCell.size();
+
         if(firstRun) {
-            firstRun = false;
             // Schedule world update
             service.scheduleAtFixedRate(new Runnable() {
                 @Override
